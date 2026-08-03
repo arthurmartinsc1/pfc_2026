@@ -8,7 +8,7 @@ export function DiscardButton() {
     <button
       type="submit"
       disabled={pending}
-      className="shrink-0 rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+      className="shrink-0 rounded-md border border-ink/15 px-3 py-1 text-xs font-medium text-steel transition-colors hover:bg-ink/5 hover:text-ink disabled:opacity-50"
     >
       {pending ? "Descartando…" : "Descartar"}
     </button>

@@ -1,19 +1,47 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+/*
+ * Sistema de tokens — ferramenta institucional de apoio à decisão, não
+ * produto de consumo. A paleta evita deliberadamente os dois clichês
+ * visuais mais comuns de produtos "IA genérica" (creme+terracota,
+ * preto+verde-ácido): usa neutros frios (papel/tinta) e um azul-aço
+ * como único acento de identidade, com verde/terracota reservados
+ * apenas para status (saudável/atenção), nunca decoração.
+ *
+ * ink      — texto principal, cabeçalho, alto contraste
+ * navy     — acento primário (links, botões, foco) + navy-deep p/ hover
+ * steel    — texto secundário/metadados
+ * paper    — fundo de página
+ * surface  — fundo de cartões/superfícies elevadas
+ * success  — status saudável (uso pontual, nunca decorativo)
+ * alert    — status de erro/atenção (uso pontual, nunca decorativo)
+ */
+@theme {
+  --color-ink: #12202e;
+  --color-navy: #2c5282;
+  --color-navy-deep: #21405f;
+  --color-steel: #55606b;
+  --color-paper: #eef1f4;
+  --color-surface: #ffffff;
+  --color-success: #2f6f4e;
+  --color-alert: #a13d2b;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-public-sans);
+  --font-heading: var(--font-source-serif);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Foco de teclado consistente em toda a aplicação — declarado uma única
+   vez em vez de repetir utilitários de foco em cada elemento interativo. */
+:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 2px;
+  border-radius: 2px;
 }

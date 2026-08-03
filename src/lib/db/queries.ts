@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 
 export const DEFAULT_PAGE_SIZE = 10;
 export const APP_SETTINGS_ID = "default";

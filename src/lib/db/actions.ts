@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { APP_SETTINGS_ID } from "@/lib/queries";
+import { prisma } from "@/lib/db/prisma";
+import { APP_SETTINGS_ID } from "@/lib/db/queries";
 
 export type ActionState = { error?: string };
 
