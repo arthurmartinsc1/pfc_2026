@@ -39,7 +39,7 @@ export function NewsFilters({
           htmlFor="keywordId"
           className="text-xs font-medium text-sage"
         >
-          Palavra-chave
+          Assunto
         </label>
         <select
           id="keywordId"

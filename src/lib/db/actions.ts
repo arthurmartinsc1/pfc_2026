@@ -15,21 +15,36 @@ export async function discardNewsItem(id: string) {
 }
 
 function parseKeywordForm(formData: FormData): {
-  data?: { termo: string; intervaloMinutos: number; ativo: boolean };
+  data?: {
+    termo: string;
+    intervaloMinutos: number;
+    ativo: boolean;
+    termosRelacionados: string[];
+  };
   error?: string;
 } {
   const termo = String(formData.get("termo") ?? "").trim();
   const intervaloMinutos = Number(formData.get("intervaloMinutos"));
   const ativo = formData.get("ativo") === "on";
+  // O input de tags envia um hidden por termo (mesmo name) — getAll cobre
+  // zero, um ou vários. Dedup preservando a ordem de digitação.
+  const termosRelacionados = Array.from(
+    new Set(
+      formData
+        .getAll("termosRelacionados")
+        .map((value) => String(value).trim())
+        .filter(Boolean)
+    )
+  );
 
   if (!termo) {
-    return { error: "Informe a palavra-chave." };
+    return { error: "Informe o assunto." };
   }
   if (!Number.isFinite(intervaloMinutos) || intervaloMinutos <= 0) {
     return { error: "Informe um intervalo de busca válido, em minutos." };
   }
 
-  return { data: { termo, intervaloMinutos, ativo } };
+  return { data: { termo, intervaloMinutos, ativo, termosRelacionados } };
 }
 
 export async function createKeyword(
@@ -70,7 +85,7 @@ export async function deleteKeyword(
   if (jobCount > 0) {
     return {
       error:
-        "Não é possível excluir: essa palavra-chave já tem execuções associadas. Desative-a em vez de excluir.",
+        "Não é possível excluir: esse assunto já tem execuções associadas. Desative-o em vez de excluir.",
     };
   }
   await prisma.keyword.delete({ where: { id } });

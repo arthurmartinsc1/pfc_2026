@@ -72,7 +72,7 @@ export default async function Home({
         <header className="flex flex-col gap-1">
           <h1 className="font-display text-4xl font-semibold text-khaki">Notícias</h1>
           <p className="text-sm text-sage">
-            Acompanhamento de notícias coletadas por palavra-chave para apoio à decisão.
+            Acompanhamento de notícias coletadas por assunto para apoio à decisão.
           </p>
         </header>
 
@@ -87,7 +87,7 @@ export default async function Home({
           </div>
           <div className="border border-khaki/10 bg-panel p-4">
             <p className="text-xs font-medium text-sage">
-              Palavras-chave monitoradas
+              Assuntos monitorados
             </p>
             <p className="mt-1 font-display text-4xl font-semibold tabular-nums text-khaki">
               {keywords.length}
@@ -143,7 +143,7 @@ export default async function Home({
             </p>
             <p className="text-xs text-sage">
               {hasActiveFilters
-                ? "Tente ajustar a palavra-chave ou o período."
+                ? "Tente ajustar o assunto ou o período."
                 : "Assim que os agentes concluírem uma busca, as notícias aparecerão aqui."}
             </p>
           </div>

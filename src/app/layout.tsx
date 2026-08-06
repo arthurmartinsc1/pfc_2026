@@ -28,7 +28,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Sistema de Notícias",
-  description: "Painel de apoio à decisão — notícias coletadas por palavra-chave",
+  description: "Painel de apoio à decisão — notícias coletadas por assunto",
 };
 
 export default function RootLayout({

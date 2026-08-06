@@ -31,6 +31,11 @@ model Keyword {
   ativo            Boolean  @default(true)
   intervaloMinutos Int      @map("intervalo_minutos")
   createdAt        DateTime @default(now()) @map("created_at")
+  // Termos relacionados ao assunto (ex: "drone", "OTAN" para "Guerra na
+  // Ucrânia") — usados pelo agente para buscar/ranquear melhor. Array
+  // vazio = comportamento antigo (busca só pelo nome). Adição acordada
+  // via spec do time de agentes (aditiva ao CONTRATO.md).
+  termosRelacionados String[] @default([]) @map("termos_relacionados")
 
   searchJobs SearchJob[]
   matches    NewsKeywordMatch[]

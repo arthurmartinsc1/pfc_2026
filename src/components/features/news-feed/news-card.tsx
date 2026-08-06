@@ -9,11 +9,38 @@ export type NewsCardItem = {
   fonte: string | null;
   resumo: string;
   fetchedAt: Date;
-  matches: { keyword: { id: string; termo: string } }[];
+  matches: {
+    keyword: { id: string; termo: string; termosRelacionados: string[] };
+  }[];
 };
+
+// Comparação sem acentos e sem caixa, para "míssil" casar com "Missil".
+function normalize(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+// Termos relacionados (dos assuntos que casaram) que de fato aparecem no
+// título ou no resumo desta notícia — mostra ao leitor *por que* a notícia
+// foi considerada relevante.
+function findMatchedTerms(item: NewsCardItem): string[] {
+  const haystack = normalize(`${item.titulo} ${item.resumo}`);
+  const found = new Set<string>();
+  for (const { keyword } of item.matches) {
+    for (const termo of keyword.termosRelacionados ?? []) {
+      if (termo.trim() && haystack.includes(normalize(termo))) {
+        found.add(termo);
+      }
+    }
+  }
+  return Array.from(found);
+}
 
 export function NewsCard({ item }: { item: NewsCardItem }) {
   const discardWithId = discardNewsItem.bind(null, item.id);
+  const matchedTerms = findMatchedTerms(item);
 
   return (
     <article className="flex flex-col gap-3 border border-l-4 border-khaki/10 border-l-brass/40 bg-panel p-4 transition-colors duration-200 hover:border-l-brass hover:bg-panel-raised">
@@ -40,14 +67,22 @@ export function NewsCard({ item }: { item: NewsCardItem }) {
 
       <p className="text-sm leading-relaxed text-khaki/90">{item.resumo}</p>
 
-      {item.matches.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+      {(item.matches.length > 0 || matchedTerms.length > 0) && (
+        <div className="flex flex-wrap items-center gap-1.5">
           {item.matches.map(({ keyword }) => (
             <span
               key={keyword.id}
               className="rounded-sm border border-brass/25 bg-brass/10 px-2 py-0.5 text-xs text-brass"
             >
               {keyword.termo}
+            </span>
+          ))}
+          {matchedTerms.map((termo) => (
+            <span
+              key={termo}
+              className="rounded-sm border border-khaki/15 px-2 py-0.5 text-xs text-sage"
+            >
+              {termo}
             </span>
           ))}
         </div>

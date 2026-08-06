@@ -53,11 +53,9 @@ export function KeywordDonut({
   if (sum === 0) {
     return (
       <section className="flex flex-col gap-2 border border-khaki/10 bg-panel p-4">
-        <h2 className="text-xs font-medium text-sage">
-          Distribuição por palavra-chave
-        </h2>
+        <h2 className="text-xs font-medium text-sage">Distribuição por assunto</h2>
         <p className="text-sm text-sage">
-          O gráfico aparecerá aqui quando houver notícias vinculadas a palavras-chave.
+          O gráfico aparecerá aqui quando houver notícias vinculadas a assuntos.
         </p>
       </section>
     );
@@ -76,11 +74,9 @@ export function KeywordDonut({
   return (
     <section className="flex flex-col gap-4 border border-khaki/10 bg-panel p-4">
       <div className="flex flex-col gap-0.5">
-        <h2 className="text-xs font-medium text-sage">
-          Distribuição por palavra-chave
-        </h2>
+        <h2 className="text-xs font-medium text-sage">Distribuição por assunto</h2>
         <p className="text-xs text-sage/80">
-          Uma notícia pode contar em mais de uma palavra-chave.
+          Uma notícia pode contar em mais de um assunto.
         </p>
       </div>
 
@@ -91,7 +87,7 @@ export function KeywordDonut({
           height={SIZE}
           className="donut-svg shrink-0"
           role="img"
-          aria-label={`Distribuição de ${totalNews} notícias por palavra-chave`}
+          aria-label={`Distribuição de ${totalNews} notícias por assunto`}
         >
           <g transform={`rotate(-90 ${CENTER} ${CENTER})`}>
             {segments.map((segment) => (

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { createKeyword, type ActionState } from "@/lib/db/actions";
 import { AlertTriangleIcon } from "@/components/ui/icons";
+import { TagsInput } from "@/components/ui/tags-input";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -32,13 +33,13 @@ export function KeywordCreateForm() {
             htmlFor="new-termo"
             className="text-xs font-medium text-sage"
           >
-            Nova palavra-chave
+            Novo assunto
           </label>
           <input
             id="new-termo"
             type="text"
             name="termo"
-            placeholder="ex: Aeronáutica"
+            placeholder="ex: Guerra na Ucrânia"
             required
             className="border border-khaki/15 bg-panel-raised px-3 py-1.5 text-sm text-khaki placeholder:text-sage/50 transition-colors focus:border-brass/60"
           />
@@ -73,6 +74,18 @@ export function KeywordCreateForm() {
         </label>
 
         <SubmitButton />
+      </div>
+
+      <div className="flex max-w-xl flex-col gap-1">
+        <label htmlFor="new-termos-relacionados" className="text-xs font-medium text-sage">
+          Termos relacionados (opcional) — Enter adiciona
+        </label>
+        <TagsInput
+          name="termosRelacionados"
+          initialTags={[]}
+          inputId="new-termos-relacionados"
+          placeholder="ex: drone, míssil, OTAN…"
+        />
       </div>
 
       {state.error && (

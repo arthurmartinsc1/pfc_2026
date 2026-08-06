@@ -39,9 +39,10 @@ Palavras-chave configuradas pela interface, usadas pelos agentes para saber o qu
 | coluna | tipo | obrigatório | observação |
 |---|---|---|---|
 | id | uuid/serial | sim | PK |
-| termo | text | sim | palavra-chave a buscar |
+| termo | text | sim | nome do assunto a buscar |
 | ativo | boolean | sim | agente só considera `ativo = true` |
 | intervalo_minutos | int | sim | frequência de rebusca |
+| termos_relacionados | text[] | sim (default `'{}'`) | termos auxiliares do assunto (ex: "drone", "OTAN") — agente usa para buscar/ranquear e preencher `relevancia`; vazio = comportamento original (adição acordada, aditiva) |
 | created_at | timestamp | sim | |
 
 ### `search_jobs`

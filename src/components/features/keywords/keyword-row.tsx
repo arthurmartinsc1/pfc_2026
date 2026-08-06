@@ -5,19 +5,22 @@ import { useFormStatus } from "react-dom";
 import { deleteKeyword, updateKeyword, type ActionState } from "@/lib/db/actions";
 import { KeywordStatus } from "@/components/features/keywords/keyword-status";
 import { AlertTriangleIcon } from "@/components/ui/icons";
+import { TagsInput } from "@/components/ui/tags-input";
 import type { SearchJobSummary } from "@/types/search-job";
 
 // Definido como estilo inline (não classe utilitária) para garantir que o
 // cabeçalho (keyword-table.tsx) e cada linha usem exatamente as mesmas
 // trilhas de coluna, sem depender da geração de uma classe Tailwind
 // arbitrária compartilhada entre arquivos.
-export const KEYWORD_TABLE_COLUMNS = "minmax(160px,2fr) 110px 70px minmax(180px,1.5fr) 150px";
+export const KEYWORD_TABLE_COLUMNS =
+  "minmax(150px,1.5fr) minmax(200px,2fr) 110px 70px minmax(170px,1.5fr) 150px";
 
 export type KeywordRowData = {
   id: string;
   termo: string;
   ativo: boolean;
   intervaloMinutos: number;
+  termosRelacionados: string[];
   searchJobs: SearchJobSummary[];
   _count: { searchJobs: number };
 };
@@ -79,6 +82,12 @@ export function KeywordRow({ keyword }: { keyword: KeywordRowData }) {
           className="w-full min-w-0 border border-khaki/15 bg-panel-raised px-2.5 py-1.5 text-sm text-khaki transition-colors focus:border-brass/60"
         />
 
+        <TagsInput
+          name="termosRelacionados"
+          initialTags={keyword.termosRelacionados}
+          placeholder="ex: drone, OTAN…"
+        />
+
         <input
           type="number"
           name="intervaloMinutos"
@@ -93,7 +102,7 @@ export function KeywordRow({ keyword }: { keyword: KeywordRowData }) {
             type="checkbox"
             name="ativo"
             defaultChecked={keyword.ativo}
-            aria-label="Palavra-chave ativa"
+            aria-label="Assunto ativo"
             className="h-4 w-4 border-khaki/20 accent-brass"
           />
         </div>
