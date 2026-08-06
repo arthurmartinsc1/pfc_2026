@@ -7,26 +7,45 @@ export function NewsFilters({
   currentKeywordId,
   currentDateFrom,
   currentDateTo,
+  currentSearch,
 }: {
   keywords: Keyword[];
   currentKeywordId?: string;
   currentDateFrom?: string;
   currentDateTo?: string;
+  currentSearch?: string;
 }) {
   return (
     <form
       method="get"
-      className="flex flex-wrap items-end gap-4 rounded-lg border border-ink/10 bg-surface p-4"
+      className="flex flex-wrap items-end gap-4 border border-khaki/10 bg-panel p-4"
     >
+      <div className="flex min-w-[200px] flex-1 flex-col gap-1 sm:max-w-xs">
+        <label htmlFor="q" className="text-xs font-medium text-sage">
+          Buscar no título ou resumo
+        </label>
+        <input
+          id="q"
+          type="search"
+          name="q"
+          defaultValue={currentSearch ?? ""}
+          placeholder="ex: sanções, fronteira…"
+          className="border border-khaki/15 bg-panel-raised px-3 py-1.5 text-sm text-khaki placeholder:text-sage/50 transition-colors focus:border-brass/60"
+        />
+      </div>
+
       <div className="flex flex-col gap-1">
-        <label htmlFor="keywordId" className="text-xs font-medium text-steel">
+        <label
+          htmlFor="keywordId"
+          className="text-xs font-medium text-sage"
+        >
           Palavra-chave
         </label>
         <select
           id="keywordId"
           name="keywordId"
           defaultValue={currentKeywordId ?? ""}
-          className="rounded-md border border-ink/15 bg-surface px-3 py-1.5 text-sm text-ink"
+          className="border border-khaki/15 bg-panel-raised px-3 py-1.5 text-sm text-khaki transition-colors focus:border-brass/60"
         >
           <option value="">Todas</option>
           {keywords.map((keyword) => (
@@ -38,7 +57,10 @@ export function NewsFilters({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="dateFrom" className="text-xs font-medium text-steel">
+        <label
+          htmlFor="dateFrom"
+          className="text-xs font-medium text-sage"
+        >
           De
         </label>
         <input
@@ -46,12 +68,15 @@ export function NewsFilters({
           type="date"
           name="dateFrom"
           defaultValue={currentDateFrom ?? ""}
-          className="rounded-md border border-ink/15 bg-surface px-3 py-1.5 text-sm text-ink"
+          className="border border-khaki/15 bg-panel-raised px-3 py-1.5 font-mono text-sm text-khaki transition-colors focus:border-brass/60"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="dateTo" className="text-xs font-medium text-steel">
+        <label
+          htmlFor="dateTo"
+          className="text-xs font-medium text-sage"
+        >
           Até
         </label>
         <input
@@ -59,21 +84,21 @@ export function NewsFilters({
           type="date"
           name="dateTo"
           defaultValue={currentDateTo ?? ""}
-          className="rounded-md border border-ink/15 bg-surface px-3 py-1.5 text-sm text-ink"
+          className="border border-khaki/15 bg-panel-raised px-3 py-1.5 font-mono text-sm text-khaki transition-colors focus:border-brass/60"
         />
       </div>
 
       <div className="flex gap-2">
         <button
           type="submit"
-          className="rounded-md bg-navy px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-navy-deep"
+          className="border border-brass bg-brass px-4 py-1.5 text-sm font-semibold text-command transition-colors hover:border-brass-bright hover:bg-brass-bright"
         >
           Filtrar
         </button>
-        {(currentKeywordId || currentDateFrom || currentDateTo) && (
+        {(currentKeywordId || currentDateFrom || currentDateTo || currentSearch) && (
           <Link
             href="/"
-            className="rounded-md border border-ink/15 px-4 py-1.5 text-sm font-medium text-steel transition-colors hover:bg-ink/5 hover:text-ink"
+            className="border border-khaki/20 px-4 py-1.5 text-sm font-medium text-sage transition-colors hover:border-khaki/40 hover:bg-khaki/5 hover:text-khaki"
           >
             Limpar
           </Link>

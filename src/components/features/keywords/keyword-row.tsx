@@ -28,7 +28,7 @@ function SaveButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-md bg-navy px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-navy-deep disabled:opacity-50"
+      className="border border-brass bg-brass px-3 py-1.5 text-xs font-semibold text-command transition-colors hover:border-brass-bright hover:bg-brass-bright disabled:opacity-50"
     >
       {pending ? "Salvando…" : "Salvar"}
     </button>
@@ -42,7 +42,7 @@ function DeleteButton({ deleteAction }: { deleteAction: (formData: FormData) => 
       type="submit"
       formAction={deleteAction}
       disabled={pending}
-      className="rounded-md border border-alert/30 px-3 py-1.5 text-xs font-medium text-alert transition-colors hover:bg-alert/8 disabled:opacity-50"
+      className="border border-signal/40 px-3 py-1.5 text-xs font-medium text-signal transition-colors hover:bg-signal/10 disabled:opacity-50"
     >
       Excluir
     </button>
@@ -66,7 +66,7 @@ export function KeywordRow({ keyword }: { keyword: KeywordRowData }) {
   const error = updateState.error || deleteState.error;
 
   return (
-    <form action={updateFormAction} className="transition-colors hover:bg-ink/[0.02]">
+    <form action={updateFormAction} className="transition-colors hover:bg-khaki/[0.03]">
       <div
         className="grid items-center gap-4 px-4 py-3"
         style={{ gridTemplateColumns: KEYWORD_TABLE_COLUMNS }}
@@ -76,7 +76,7 @@ export function KeywordRow({ keyword }: { keyword: KeywordRowData }) {
           name="termo"
           defaultValue={keyword.termo}
           required
-          className="w-full min-w-0 rounded-md border border-ink/15 bg-surface px-2.5 py-1.5 text-sm text-ink"
+          className="w-full min-w-0 border border-khaki/15 bg-panel-raised px-2.5 py-1.5 text-sm text-khaki transition-colors focus:border-brass/60"
         />
 
         <input
@@ -85,7 +85,7 @@ export function KeywordRow({ keyword }: { keyword: KeywordRowData }) {
           defaultValue={keyword.intervaloMinutos}
           min={1}
           required
-          className="w-full min-w-0 rounded-md border border-ink/15 bg-surface px-2.5 py-1.5 text-sm text-ink"
+          className="w-full min-w-0 border border-khaki/15 bg-panel-raised px-2.5 py-1.5 font-mono text-sm text-khaki transition-colors focus:border-brass/60"
         />
 
         <div className="flex justify-center">
@@ -94,7 +94,7 @@ export function KeywordRow({ keyword }: { keyword: KeywordRowData }) {
             name="ativo"
             defaultChecked={keyword.ativo}
             aria-label="Palavra-chave ativa"
-            className="h-4 w-4 rounded border-ink/20 accent-navy"
+            className="h-4 w-4 border-khaki/20 accent-brass"
           />
         </div>
 
@@ -107,7 +107,7 @@ export function KeywordRow({ keyword }: { keyword: KeywordRowData }) {
       </div>
 
       {error && (
-        <p className="flex items-center gap-1.5 px-4 pb-3 text-xs text-alert">
+        <p className="flex items-center gap-1.5 px-4 pb-3 text-xs text-signal">
           <AlertTriangleIcon className="h-3.5 w-3.5 shrink-0" />
           {error}
         </p>

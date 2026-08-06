@@ -1,21 +1,29 @@
 import type { Metadata } from "next";
-import { Public_Sans, Source_Serif_4 } from "next/font/google";
+import { IBM_Plex_Mono, Public_Sans, Saira_Condensed } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import "./globals.css";
 
-// Par tipográfico: Public Sans (corpo, rótulos, UI — desenhada para uso
-// governamental/institucional, o USWDS) + Source Serif 4 (títulos e
-// dados de destaque, para transmitir gravidade e tradição documental).
+// Trio tipográfico da "Sala de Situação": Public Sans (corpo/UI — desenhada
+// para uso governamental, o USWDS), Saira Condensed (display — condensada e
+// técnica, usada em caps com tracking, remete a sinalização e estêncil
+// militar) e IBM Plex Mono (timestamps, contadores e metadados — leitura
+// de instrumento).
 const publicSans = Public_Sans({
   variable: "--font-public-sans",
   subsets: ["latin"],
   weight: "variable",
 });
 
-const sourceSerif = Source_Serif_4({
-  variable: "--font-source-serif",
+const sairaCondensed = Saira_Condensed({
+  variable: "--font-saira",
   subsets: ["latin"],
-  weight: "variable",
+  weight: ["500", "600", "700"],
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -31,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${publicSans.variable} ${sourceSerif.variable} h-full antialiased`}
+      className={`${publicSans.variable} ${sairaCondensed.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <SiteHeader />

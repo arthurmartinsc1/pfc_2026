@@ -22,13 +22,13 @@ export default async function ConfiguracoesPage() {
             href="/"
             aria-label="Voltar para notícias"
             title="Voltar"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-steel transition-colors hover:bg-ink/5 hover:text-ink"
+            className="flex h-9 w-9 items-center justify-center rounded-sm text-sage transition-colors hover:bg-khaki/10 hover:text-khaki"
           >
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <div className="flex flex-col gap-0.5">
-            <h1 className="font-heading text-3xl font-semibold text-ink">Configurações</h1>
-            <p className="text-sm text-steel">
+            <h1 className="font-display text-4xl font-semibold text-khaki">Configurações</h1>
+            <p className="text-sm text-sage">
               Gerencie as palavras-chave monitoradas e os parâmetros de exibição do painel.
             </p>
           </div>
@@ -36,14 +36,16 @@ export default async function ConfiguracoesPage() {
 
         <section className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-ink">Palavras-chave</h2>
-            <span className="rounded-full bg-ink/8 px-2 py-0.5 text-xs font-medium text-steel">
+            <h2 className="font-display text-lg font-semibold text-khaki">
+              Palavras-chave
+            </h2>
+            <span className="rounded-sm border border-khaki/15 bg-khaki/5 px-2 py-0.5 text-xs tabular-nums text-sage">
               {keywords.length}
             </span>
           </div>
 
           {keywords.length === 0 ? (
-            <p className="text-sm text-steel">Nenhuma palavra-chave cadastrada ainda.</p>
+            <p className="text-sm text-sage">Nenhuma palavra-chave cadastrada ainda.</p>
           ) : (
             <KeywordTable keywords={keywords} />
           )}
@@ -52,7 +54,9 @@ export default async function ConfiguracoesPage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-ink">Configurações gerais</h2>
+          <h2 className="font-display text-lg font-semibold text-khaki">
+            Configurações gerais
+          </h2>
           <div className="max-w-md">
             <AppSettingsForm limiteNoticiasExibidas={settings.limiteNoticiasExibidas} />
           </div>

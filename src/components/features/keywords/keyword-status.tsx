@@ -5,7 +5,7 @@ import type { SearchJobSummary } from "@/types/search-job";
 export function KeywordStatus({ latestJob }: { latestJob: SearchJobSummary | undefined }) {
   if (!latestJob) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-steel">
+      <span className="inline-flex items-center gap-1.5 text-xs text-sage">
         <ClockIcon className="h-3.5 w-3.5 shrink-0" />
         Nunca executado
       </span>
@@ -14,7 +14,7 @@ export function KeywordStatus({ latestJob }: { latestJob: SearchJobSummary | und
 
   if (latestJob.status === "concluido") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-success">
+      <span className="inline-flex items-center gap-1.5 text-xs text-olive">
         <CheckCircleIcon className="h-3.5 w-3.5 shrink-0" />
         Concluído em {latestJob.finishedAt ? formatDateTime(latestJob.finishedAt) : "—"}
       </span>
@@ -23,7 +23,7 @@ export function KeywordStatus({ latestJob }: { latestJob: SearchJobSummary | und
 
   if (latestJob.status === "erro") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-alert">
+      <span className="inline-flex items-center gap-1.5 text-xs text-signal">
         <AlertTriangleIcon className="h-3.5 w-3.5 shrink-0" />
         Erro em {latestJob.finishedAt ? formatDateTime(latestJob.finishedAt) : "—"}
         {latestJob.erroMsg && `: ${latestJob.erroMsg}`}
@@ -33,8 +33,8 @@ export function KeywordStatus({ latestJob }: { latestJob: SearchJobSummary | und
 
   if (latestJob.status === "rodando") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-navy">
-        <ClockIcon className="h-3.5 w-3.5 shrink-0" />
+      <span className="inline-flex items-center gap-1.5 text-xs text-brass">
+        <span className="radar-dot" aria-hidden="true" />
         Em execução desde{" "}
         {latestJob.startedAt ? formatDateTime(latestJob.startedAt) : "—"}
       </span>
@@ -42,7 +42,7 @@ export function KeywordStatus({ latestJob }: { latestJob: SearchJobSummary | und
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-steel">
+    <span className="inline-flex items-center gap-1.5 text-xs text-sage">
       <ClockIcon className="h-3.5 w-3.5 shrink-0" />
       Pendente desde {formatDateTime(latestJob.createdAt)}
     </span>

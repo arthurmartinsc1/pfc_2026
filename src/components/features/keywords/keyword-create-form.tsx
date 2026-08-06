@@ -11,7 +11,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-md bg-navy px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-navy-deep disabled:opacity-50"
+      className="border border-brass bg-brass px-4 py-1.5 text-sm font-semibold text-command transition-colors hover:border-brass-bright hover:bg-brass-bright disabled:opacity-50"
     >
       {pending ? "Adicionando…" : "Adicionar"}
     </button>
@@ -24,11 +24,14 @@ export function KeywordCreateForm() {
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-3 rounded-lg border border-dashed border-ink/20 p-4 transition-colors hover:border-navy/40"
+      className="flex flex-col gap-3 border border-dashed border-khaki/20 p-4 transition-colors hover:border-brass/50"
     >
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
-          <label htmlFor="new-termo" className="text-xs font-medium text-steel">
+          <label
+            htmlFor="new-termo"
+            className="text-xs font-medium text-sage"
+          >
             Nova palavra-chave
           </label>
           <input
@@ -37,12 +40,15 @@ export function KeywordCreateForm() {
             name="termo"
             placeholder="ex: Aeronáutica"
             required
-            className="rounded-md border border-ink/15 bg-surface px-3 py-1.5 text-sm text-ink"
+            className="border border-khaki/15 bg-panel-raised px-3 py-1.5 text-sm text-khaki placeholder:text-sage/50 transition-colors focus:border-brass/60"
           />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="new-intervalo" className="text-xs font-medium text-steel">
+          <label
+            htmlFor="new-intervalo"
+            className="text-xs font-medium text-sage"
+          >
             Intervalo (min)
           </label>
           <input
@@ -52,12 +58,17 @@ export function KeywordCreateForm() {
             defaultValue={60}
             min={1}
             required
-            className="w-28 rounded-md border border-ink/15 bg-surface px-3 py-1.5 text-sm text-ink"
+            className="w-28 border border-khaki/15 bg-panel-raised px-3 py-1.5 font-mono text-sm text-khaki transition-colors focus:border-brass/60"
           />
         </div>
 
-        <label className="flex items-center gap-2 pb-1.5 text-sm text-steel">
-          <input type="checkbox" name="ativo" defaultChecked className="h-4 w-4 rounded border-ink/20 accent-navy" />
+        <label className="flex items-center gap-2 pb-1.5 text-sm text-sage">
+          <input
+            type="checkbox"
+            name="ativo"
+            defaultChecked
+            className="h-4 w-4 border-khaki/20 accent-brass"
+          />
           Ativa
         </label>
 
@@ -65,7 +76,7 @@ export function KeywordCreateForm() {
       </div>
 
       {state.error && (
-        <p className="flex items-center gap-1.5 text-xs text-alert">
+        <p className="flex items-center gap-1.5 text-xs text-signal">
           <AlertTriangleIcon className="h-3.5 w-3.5 shrink-0" />
           {state.error}
         </p>

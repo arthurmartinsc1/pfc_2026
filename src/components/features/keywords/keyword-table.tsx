@@ -6,10 +6,10 @@ import {
 
 export function KeywordTable({ keywords }: { keywords: KeywordRowData[] }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-ink/10 bg-surface">
-      <div className="min-w-[680px] divide-y divide-ink/8">
+    <div className="overflow-x-auto border border-khaki/10 bg-panel">
+      <div className="min-w-[680px] divide-y divide-khaki/8">
         <div
-          className="grid items-center gap-4 bg-ink/[0.03] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-steel"
+          className="grid items-center gap-4 bg-khaki/[0.04] px-4 py-2 text-xs font-medium text-sage"
           style={{ gridTemplateColumns: KEYWORD_TABLE_COLUMNS }}
         >
           <span>Palavra-chave</span>
@@ -19,7 +19,7 @@ export function KeywordTable({ keywords }: { keywords: KeywordRowData[] }) {
           <span className="text-right">Ações</span>
         </div>
 
-        <div className="divide-y divide-ink/8">
+        <div className="divide-y divide-khaki/8">
           {keywords.map((keyword) => (
             <KeywordRow key={keyword.id} keyword={keyword} />
           ))}

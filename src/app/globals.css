@@ -1,47 +1,133 @@
 @import "tailwindcss";
 
 /*
- * Sistema de tokens — ferramenta institucional de apoio à decisão, não
- * produto de consumo. A paleta evita deliberadamente os dois clichês
- * visuais mais comuns de produtos "IA genérica" (creme+terracota,
- * preto+verde-ácido): usa neutros frios (papel/tinta) e um azul-aço
- * como único acento de identidade, com verde/terracota reservados
- * apenas para status (saudável/atenção), nunca decoração.
+ * Sistema de tokens — "Sala de Situação".
+ * Painel de apoio à decisão com identidade militar: fundo oliva-negro
+ * (centro de operações noturno, nunca preto puro), texto cáqui (papel de
+ * manual de campanha), e latão de insígnia como único acento de ação.
+ * Verde-oliva e vermelho-sinal são reservados exclusivamente a status
+ * operacional (coleta saudável / atenção), nunca decoração.
  *
- * ink      — texto principal, cabeçalho, alto contraste
- * navy     — acento primário (links, botões, foco) + navy-deep p/ hover
- * steel    — texto secundário/metadados
- * paper    — fundo de página
- * surface  — fundo de cartões/superfícies elevadas
- * success  — status saudável (uso pontual, nunca decorativo)
- * alert    — status de erro/atenção (uso pontual, nunca decorativo)
+ * command      — fundo de página (oliva-negro)
+ * panel        — superfícies/cartões
+ * panel-raised — superfícies em hover/elevadas
+ * khaki        — texto principal
+ * sage         — texto secundário/metadados
+ * brass        — acento primário (links, botões, foco) + brass-bright p/ hover
+ * olive        — status operacional saudável
+ * signal       — status de erro/atenção
  */
 @theme {
-  --color-ink: #12202e;
-  --color-navy: #2c5282;
-  --color-navy-deep: #21405f;
-  --color-steel: #55606b;
-  --color-paper: #eef1f4;
-  --color-surface: #ffffff;
-  --color-success: #2f6f4e;
-  --color-alert: #a13d2b;
+  --color-command: #10140d;
+  --color-panel: #181d13;
+  --color-panel-raised: #212819;
+  --color-khaki: #f2efe2;
+  --color-sage: #b0b7a0;
+  --color-brass: #d3ae57;
+  --color-brass-bright: #e8c46d;
+  --color-olive: #9ccb7d;
+  --color-signal: #e87a60;
 }
 
 @theme inline {
   --font-sans: var(--font-public-sans);
-  --font-heading: var(--font-source-serif);
+  --font-display: var(--font-saira);
+  --font-mono: var(--font-plex-mono);
 }
 
 body {
-  background: var(--color-paper);
-  color: var(--color-ink);
+  background-color: var(--color-command);
+  color: var(--color-khaki);
   font-family: var(--font-sans);
+  /* Controles nativos (date picker, select) renderizam no tema escuro. */
+  color-scheme: dark;
+}
+
+::selection {
+  background: rgb(201 164 78 / 0.3);
 }
 
 /* Foco de teclado consistente em toda a aplicação — declarado uma única
    vez em vez de repetir utilitários de foco em cada elemento interativo. */
 :focus-visible {
-  outline: 2px solid var(--color-navy);
+  outline: 2px solid var(--color-brass);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+/* Entrada escalonada dos cartões — delay controlado por --enter-delay. */
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-enter {
+  animation: enter-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--enter-delay, 0s);
+}
+
+/* Ponto de radar — pulso contínuo no status operacional. */
+@keyframes radar-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  70%,
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+.radar-dot {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.radar-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: radar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.radar-dot--static::after {
+  animation: none;
+  opacity: 0;
+}
+
+/* Donut de distribuição — ao pairar sobre uma fatia, as demais recuam
+   (ênfase), com tooltip nativo via <title>. */
+.donut-seg {
+  transition: opacity 0.15s ease;
+}
+.donut-svg:has(.donut-seg:hover) .donut-seg:not(:hover) {
+  opacity: 0.35;
+}
+
+/* Barras de notícias por dia — mesma ênfase de hover do donut. */
+.bar {
+  transition: opacity 0.15s ease;
+}
+.bars-svg:has(.bar:hover) .bar:not(:hover) {
+  opacity: 0.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-enter {
+    animation: none;
+  }
+  .radar-dot::after {
+    animation: none;
+    opacity: 0;
+  }
 }

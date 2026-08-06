@@ -11,7 +11,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-md bg-navy px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-navy-deep disabled:opacity-50"
+      className="border border-brass bg-brass px-4 py-1.5 text-sm font-semibold text-command transition-colors hover:border-brass-bright hover:bg-brass-bright disabled:opacity-50"
     >
       {pending ? "Salvando…" : "Salvar"}
     </button>
@@ -24,11 +24,14 @@ export function AppSettingsForm({ limiteNoticiasExibidas }: { limiteNoticiasExib
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-3 rounded-lg border border-ink/10 bg-surface p-4"
+      className="flex flex-col gap-3 border border-khaki/10 bg-panel p-4"
     >
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
-          <label htmlFor="limiteNoticiasExibidas" className="text-xs font-medium text-steel">
+          <label
+            htmlFor="limiteNoticiasExibidas"
+            className="text-xs font-medium text-sage"
+          >
             Notícias exibidas por página
           </label>
           <input
@@ -39,7 +42,7 @@ export function AppSettingsForm({ limiteNoticiasExibidas }: { limiteNoticiasExib
             min={1}
             max={100}
             required
-            className="w-28 rounded-md border border-ink/15 bg-surface px-3 py-1.5 text-sm text-ink"
+            className="w-28 border border-khaki/15 bg-panel-raised px-3 py-1.5 font-mono text-sm text-khaki transition-colors focus:border-brass/60"
           />
         </div>
 
@@ -47,7 +50,7 @@ export function AppSettingsForm({ limiteNoticiasExibidas }: { limiteNoticiasExib
       </div>
 
       {state.error && (
-        <p className="flex items-center gap-1.5 text-xs text-alert">
+        <p className="flex items-center gap-1.5 text-xs text-signal">
           <AlertTriangleIcon className="h-3.5 w-3.5 shrink-0" />
           {state.error}
         </p>

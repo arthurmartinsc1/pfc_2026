@@ -17,23 +17,29 @@ export function Pagination({
   return (
     <nav className="flex items-center justify-center gap-4 text-sm">
       {hasPrevious ? (
-        <Link href={buildHref(page - 1)} className="text-ink hover:text-navy hover:underline">
+        <Link
+          href={buildHref(page - 1)}
+          className="text-khaki transition-colors hover:text-brass-bright hover:underline"
+        >
           ← Anterior
         </Link>
       ) : (
-        <span className="text-ink/30">← Anterior</span>
+        <span className="text-khaki/30">← Anterior</span>
       )}
 
-      <span className="text-steel">
+      <span className="text-xs tabular-nums text-sage">
         Página {page} de {pageCount}
       </span>
 
       {hasNext ? (
-        <Link href={buildHref(page + 1)} className="text-ink hover:text-navy hover:underline">
+        <Link
+          href={buildHref(page + 1)}
+          className="text-khaki transition-colors hover:text-brass-bright hover:underline"
+        >
           Próxima →
         </Link>
       ) : (
-        <span className="text-ink/30">Próxima →</span>
+        <span className="text-khaki/30">Próxima →</span>
       )}
     </nav>
   );
