@@ -1,4 +1,3 @@
-import { discardNewsItem } from "@/lib/db/actions";
 import { DiscardButton } from "@/components/features/news-feed/discard-button";
 import { formatDateTime } from "@/lib/utils/format";
 
@@ -38,9 +37,16 @@ function findMatchedTerms(item: NewsCardItem): string[] {
   return Array.from(found);
 }
 
+// Um mesmo assunto pode casar a mesma notícia em jobs diferentes (a unicidade
+// no banco é por notícia+assunto+job) — exibe cada assunto uma vez só.
+function uniqueKeywords(item: NewsCardItem) {
+  const byId = new Map(item.matches.map(({ keyword }) => [keyword.id, keyword]));
+  return Array.from(byId.values());
+}
+
 export function NewsCard({ item }: { item: NewsCardItem }) {
-  const discardWithId = discardNewsItem.bind(null, item.id);
   const matchedTerms = findMatchedTerms(item);
+  const keywords = uniqueKeywords(item);
 
   return (
     <article className="flex flex-col gap-3 border border-l-4 border-khaki/10 border-l-brass/40 bg-panel p-4 transition-colors duration-200 hover:border-l-brass hover:bg-panel-raised">
@@ -60,16 +66,14 @@ export function NewsCard({ item }: { item: NewsCardItem }) {
             {item.titulo}
           </a>
         </div>
-        <form action={discardWithId}>
-          <DiscardButton />
-        </form>
+        <DiscardButton newsItemId={item.id} />
       </div>
 
       <p className="text-sm leading-relaxed text-khaki/90">{item.resumo}</p>
 
-      {(item.matches.length > 0 || matchedTerms.length > 0) && (
+      {(keywords.length > 0 || matchedTerms.length > 0) && (
         <div className="flex flex-wrap items-center gap-1.5">
-          {item.matches.map(({ keyword }) => (
+          {keywords.map((keyword) => (
             <span
               key={keyword.id}
               className="rounded-sm border border-brass/25 bg-brass/10 px-2 py-0.5 text-xs text-brass"

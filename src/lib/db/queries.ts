@@ -60,6 +60,10 @@ export async function getKeywordsForFilter() {
   return prisma.keyword.findMany({ orderBy: { termo: "asc" } });
 }
 
+export async function getKeywordById(id: string) {
+  return prisma.keyword.findUnique({ where: { id } });
+}
+
 export async function getKeywordsWithStatus() {
   return prisma.keyword.findMany({
     orderBy: { termo: "asc" },

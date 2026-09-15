@@ -15,17 +15,31 @@ export async function discardNewsItem(id: string) {
 }
 
 function parseKeywordForm(formData: FormData): {
-  data?: {
-    termo: string;
-    intervaloMinutos: number;
-    ativo: boolean;
-    termosRelacionados: string[];
-  };
+  data?: { termo: string; intervaloMinutos: number; ativo: boolean };
   error?: string;
 } {
   const termo = String(formData.get("termo") ?? "").trim();
   const intervaloMinutos = Number(formData.get("intervaloMinutos"));
   const ativo = formData.get("ativo") === "on";
+
+  if (!termo) {
+    return { error: "Informe o assunto." };
+  }
+  if (!Number.isFinite(intervaloMinutos) || intervaloMinutos <= 0) {
+    return { error: "Informe um intervalo de busca válido, em minutos." };
+  }
+
+  return { data: { termo, intervaloMinutos, ativo } };
+}
+
+// Termos relacionados são editados apenas na página dedicada do assunto
+// (/configuracoes/assuntos/[id]) e salvos de uma vez no submit — nunca
+// pelo formulário da tabela, que por isso não toca nesse campo.
+export async function updateKeywordTerms(
+  id: string,
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
   // O input de tags envia um hidden por termo (mesmo name) — getAll cobre
   // zero, um ou vários. Dedup preservando a ordem de digitação.
   const termosRelacionados = Array.from(
@@ -37,14 +51,11 @@ function parseKeywordForm(formData: FormData): {
     )
   );
 
-  if (!termo) {
-    return { error: "Informe o assunto." };
-  }
-  if (!Number.isFinite(intervaloMinutos) || intervaloMinutos <= 0) {
-    return { error: "Informe um intervalo de busca válido, em minutos." };
-  }
-
-  return { data: { termo, intervaloMinutos, ativo, termosRelacionados } };
+  await prisma.keyword.update({ where: { id }, data: { termosRelacionados } });
+  revalidatePath("/configuracoes");
+  revalidatePath(`/configuracoes/assuntos/${id}`);
+  revalidatePath("/");
+  return {};
 }
 
 export async function createKeyword(

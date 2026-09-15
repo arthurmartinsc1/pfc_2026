@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Public_Sans, Saira_Condensed } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
+import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
 // Trio tipográfico da "Sala de Situação": Public Sans (corpo/UI — desenhada
@@ -42,8 +43,10 @@ export default function RootLayout({
       className={`${publicSans.variable} ${sairaCondensed.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <SiteHeader />
-        {children}
+        <ToastProvider>
+          <SiteHeader />
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

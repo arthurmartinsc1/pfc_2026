@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircleIcon } from "@/components/ui/icons";
+import { useToast } from "@/components/ui/toast";
 
 // Parâmetros dos agentes de busca/resumo. Os agentes leem a configuração
 // real do próprio ambiente em que rodam (envs BUSCADOR_*/RESUMIDOR_*);
@@ -47,8 +47,8 @@ const inputClass =
 const labelClass = "text-xs font-medium text-sage";
 
 export function AgentSettingsForm() {
+  const toast = useToast();
   const [settings, setSettings] = useState<AgentSettings>(DEFAULTS);
-  const [saved, setSaved] = useState(false);
 
   // localStorage só existe no cliente — carregar depois da hidratação,
   // de forma assíncrona (setState síncrono em effect dispara re-render
@@ -67,7 +67,6 @@ export function AgentSettingsForm() {
 
   function update<K extends keyof AgentSettings>(key: K, value: AgentSettings[K]) {
     setSettings((current) => ({ ...current, [key]: value }));
-    setSaved(false);
   }
 
   function toggleChannel(id: string, checked: boolean) {
@@ -75,13 +74,12 @@ export function AgentSettingsForm() {
       ...current,
       canais: checked ? [...current.canais, id] : current.canais.filter((c) => c !== id),
     }));
-    setSaved(false);
   }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    setSaved(true);
+    toast("Parâmetros salvos com sucesso");
   }
 
   return (
@@ -151,20 +149,12 @@ export function AgentSettingsForm() {
         </div>
       </fieldset>
 
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          className="border border-brass bg-brass px-4 py-1.5 text-sm font-semibold text-command transition-colors hover:border-brass-bright hover:bg-brass-bright"
-        >
-          Salvar parâmetros
-        </button>
-        {saved && (
-          <span className="flex items-center gap-1.5 text-xs text-olive">
-            <CheckCircleIcon className="h-3.5 w-3.5 shrink-0" />
-            Parâmetros salvos
-          </span>
-        )}
-      </div>
+      <button
+        type="submit"
+        className="self-start border border-brass bg-brass px-4 py-1.5 text-sm font-semibold text-command transition-colors hover:border-brass-bright hover:bg-brass-bright"
+      >
+        Salvar parâmetros
+      </button>
     </form>
   );
 }

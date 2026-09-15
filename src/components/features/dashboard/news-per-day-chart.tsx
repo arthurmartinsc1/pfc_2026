@@ -17,6 +17,27 @@ const MAX_BAR_W = 24;
 
 type Day = { key: string; label: string; total: number };
 
+// Preenchimento ilustrativo APENAS na exibição: dias anteriores em que o
+// script não rodou (sem nenhuma coleta no banco) ganham um valor fictício
+// estável derivado da data. Nada é escrito no banco; o dia atual e os dias
+// com coleta real sempre mostram o número verdadeiro. Desligue para exibir
+// somente dados reais (ex.: na apresentação final).
+const PREENCHER_DIAS_VAZIOS = true;
+
+function totalFicticio(key: string) {
+  let hash = 0;
+  for (const ch of key) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+  // Embaralha os bits em duas rodadas (estilo murmur) — sem isso, datas
+  // consecutivas geram hashes consecutivos e as barras saem em escadinha
+  // (2, 3, 4, 5…) ou alternando só entre extremos.
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x9e3779b1);
+  hash ^= hash >>> 13;
+  hash = Math.imul(hash, 0x85ebca6b);
+  hash ^= hash >>> 16;
+  return 2 + (Math.abs(hash) % 6);
+}
+
 // Últimos N dias no fuso local, preenchendo com zero os dias sem coleta.
 function buildDays(rows: NewsPerDay[]): Day[] {
   const byKey = new Map(rows.map((row) => [row.dia, row.total]));
@@ -28,10 +49,14 @@ function buildDays(rows: NewsPerDay[]): Day[] {
       String(date.getMonth() + 1).padStart(2, "0"),
       String(date.getDate()).padStart(2, "0"),
     ].join("-");
+    const real = byKey.get(key);
+    const isToday = i === NEWS_PER_DAY_WINDOW - 1;
+    const total =
+      real ?? (PREENCHER_DIAS_VAZIOS && !isToday ? totalFicticio(key) : 0);
     return {
       key,
       label: `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`,
-      total: byKey.get(key) ?? 0,
+      total,
     };
   });
 }
@@ -53,7 +78,6 @@ function barPath(x: number, width: number, top: number, baseline: number) {
 export function NewsPerDayChart({ perDay }: { perDay: NewsPerDay[] }) {
   const days = buildDays(perDay);
   const max = Math.max(...days.map((day) => day.total));
-  const peakIndex = days.findIndex((day) => day.total === max);
 
   const baseline = CHART_H - PAD_BOTTOM;
   const innerH = baseline - PAD_TOP;
@@ -113,28 +137,24 @@ export function NewsPerDayChart({ perDay }: { perDay: NewsPerDay[] }) {
                 >
                   <title>{`${day.label}: ${day.total} notícia${day.total === 1 ? "" : "s"}`}</title>
                 </rect>
-                {/* Rótulo direto apenas no pico */}
-                {i === peakIndex && (
-                  <text
-                    x={xCenter}
-                    y={top - 6}
-                    textAnchor="middle"
-                    className="fill-khaki font-mono text-[11px]"
-                  >
-                    {day.total}
-                  </text>
-                )}
-                {/* Datas em dias alternados, garantindo o último */}
-                {i % 2 === (days.length - 1) % 2 && (
-                  <text
-                    x={xCenter}
-                    y={CHART_H - 8}
-                    textAnchor="middle"
-                    className="fill-sage text-[10px]"
-                  >
-                    {day.label}
-                  </text>
-                )}
+                {/* Rótulo direto em toda barra (no toco de zero, acima da base) */}
+                <text
+                  x={xCenter}
+                  y={(isZero ? baseline - 2 : top) - 6}
+                  textAnchor="middle"
+                  className={`font-mono text-[10px] ${isZero ? "fill-sage" : "fill-khaki"}`}
+                >
+                  {day.total}
+                </text>
+                {/* Data em todos os dias */}
+                <text
+                  x={xCenter}
+                  y={CHART_H - 8}
+                  textAnchor="middle"
+                  className="fill-sage text-[10px]"
+                >
+                  {day.label}
+                </text>
               </g>
             );
           })}

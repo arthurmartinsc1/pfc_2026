@@ -1,10 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { createKeyword, type ActionState } from "@/lib/db/actions";
-import { AlertTriangleIcon } from "@/components/ui/icons";
-import { TagsInput } from "@/components/ui/tags-input";
+import { createKeyword } from "@/lib/db/actions";
+import { useToast } from "@/components/ui/toast";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -20,19 +18,25 @@ function SubmitButton() {
 }
 
 export function KeywordCreateForm() {
-  const [state, formAction] = useActionState<ActionState, FormData>(createKeyword, {});
+  const toast = useToast();
+
+  async function handleAction(formData: FormData) {
+    const result = await createKeyword({}, formData);
+    if (result.error) {
+      toast(result.error, "error");
+      return;
+    }
+    toast("Assunto adicionado — complete as palavras-chave no menu ⋯ da tabela", "success", 6000);
+  }
 
   return (
     <form
-      action={formAction}
+      action={handleAction}
       className="flex flex-col gap-3 border border-dashed border-khaki/20 p-4 transition-colors hover:border-brass/50"
     >
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
-          <label
-            htmlFor="new-termo"
-            className="text-xs font-medium text-sage"
-          >
+          <label htmlFor="new-termo" className="text-xs font-medium text-sage">
             Novo assunto
           </label>
           <input
@@ -46,10 +50,7 @@ export function KeywordCreateForm() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label
-            htmlFor="new-intervalo"
-            className="text-xs font-medium text-sage"
-          >
+          <label htmlFor="new-intervalo" className="text-xs font-medium text-sage">
             Intervalo (min)
           </label>
           <input
@@ -76,24 +77,10 @@ export function KeywordCreateForm() {
         <SubmitButton />
       </div>
 
-      <div className="flex max-w-xl flex-col gap-1">
-        <label htmlFor="new-termos-relacionados" className="text-xs font-medium text-sage">
-          Termos relacionados (opcional) — Enter adiciona
-        </label>
-        <TagsInput
-          name="termosRelacionados"
-          initialTags={[]}
-          inputId="new-termos-relacionados"
-          placeholder="ex: drone, míssil, OTAN…"
-        />
-      </div>
-
-      {state.error && (
-        <p className="flex items-center gap-1.5 text-xs text-signal">
-          <AlertTriangleIcon className="h-3.5 w-3.5 shrink-0" />
-          {state.error}
-        </p>
-      )}
+      <p className="text-xs text-sage/80">
+        Os termos relacionados do assunto são adicionados depois, na página do assunto (⋯ na
+        tabela).
+      </p>
     </form>
   );
 }

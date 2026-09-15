@@ -17,6 +17,9 @@ basta o banco existir. Veja [`docs/CONTRATO.md`](docs/CONTRATO.md) para o
 contrato completo de schema e responsabilidades, e
 [`docs/PLANO.md`](docs/PLANO.md) para o plano de implementação por fases.
 
+Para subir esta interface em uma máquina virtual (VPS), veja
+[`DEPLOY.md`](DEPLOY.md).
+
 ## Stack
 
 - Next.js (App Router) + TypeScript

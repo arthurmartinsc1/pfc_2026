@@ -1,9 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { updateAppSettings, type ActionState } from "@/lib/db/actions";
-import { AlertTriangleIcon } from "@/components/ui/icons";
+import { updateAppSettings } from "@/lib/db/actions";
+import { useToast } from "@/components/ui/toast";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -19,11 +18,20 @@ function SubmitButton() {
 }
 
 export function AppSettingsForm({ limiteNoticiasExibidas }: { limiteNoticiasExibidas: number }) {
-  const [state, formAction] = useActionState<ActionState, FormData>(updateAppSettings, {});
+  const toast = useToast();
+
+  async function handleAction(formData: FormData) {
+    const result = await updateAppSettings({}, formData);
+    if (result.error) {
+      toast(result.error, "error");
+      return;
+    }
+    toast("Configurações salvas com sucesso");
+  }
 
   return (
     <form
-      action={formAction}
+      action={handleAction}
       className="flex flex-col gap-3 border border-khaki/10 bg-panel p-4"
     >
       <div className="flex flex-wrap items-end gap-3">
@@ -48,13 +56,6 @@ export function AppSettingsForm({ limiteNoticiasExibidas }: { limiteNoticiasExib
 
         <SubmitButton />
       </div>
-
-      {state.error && (
-        <p className="flex items-center gap-1.5 text-xs text-signal">
-          <AlertTriangleIcon className="h-3.5 w-3.5 shrink-0" />
-          {state.error}
-        </p>
-      )}
     </form>
   );
 }
