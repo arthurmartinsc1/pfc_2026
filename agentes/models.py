@@ -16,7 +16,7 @@ Detalhes do schema real (conferidos via information_schema no banco da interface
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, Text, Uuid, func
+from sqlalchemy import ARRAY, DateTime, Float, ForeignKey, Text, Uuid, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.schema import FetchedValue
 
@@ -49,6 +49,7 @@ class Keyword(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), server_default=func.now()
     )
+    termos_relacionados: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
 
 
 class SearchJob(Base):

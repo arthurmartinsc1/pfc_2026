@@ -11,56 +11,41 @@ entao a selecao passou a ranquear os TOP_K mais relevantes para 1 unico termo.
 import logging
 import re
 import time
+import unicodedata
 
 from gnews import GNews
-from huggingface_hub import login
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 import config
 from google_news import resolver_url
-from local_llm import resolver_device, resolver_dtype
+from llm_client import gerar
 
 logger = logging.getLogger(__name__)
 
-_seletor = {"tokenizer": None, "pipe": None}
 
-
-def _get_seletor_pipeline():
-    """Carrega o modelo de selecao sob demanda e mantem em memoria entre ciclos."""
-    if _seletor["pipe"] is not None:
-        return _seletor["tokenizer"], _seletor["pipe"]
-
-    if config.HF_TOKEN:
-        login(token=config.HF_TOKEN)
-
-    device = resolver_device()
-    dtype = resolver_dtype(device)
-    logger.info("Carregando modelo de selecao %s (device=%s)...", config.BUSCADOR_MODEL, device)
-    tokenizer = AutoTokenizer.from_pretrained(config.BUSCADOR_MODEL)
-    model = AutoModelForCausalLM.from_pretrained(config.BUSCADOR_MODEL, dtype=dtype)
-    model = model.to(device)
-    gen_pipe = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-        device=device,
-        max_new_tokens=150,
-        do_sample=False,
-        pad_token_id=tokenizer.eos_token_id,
-    )
-    _seletor["tokenizer"] = tokenizer
-    _seletor["pipe"] = gen_pipe
-    logger.info("Modelo de selecao carregado.")
-    return tokenizer, gen_pipe
+def _normalizar(texto: str) -> str:
+    """minusculas e sem acento, pra comparar 'colombia' com 'Colômbia'."""
+    sem_acento = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
+    return sem_acento.lower()
 
 
 def _fonte_permitida(fonte: str) -> bool:
-    f = fonte.lower()
-    return any(permitida in f for permitida in config.FONTES_PERMITIDAS)
+    f = _normalizar(fonte)
+    return any(_normalizar(permitida) in f for permitida in config.FONTES_PERMITIDAS)
+
+
+def _calcular_relevancia(titulo: str, snippet: str, termos_relacionados: list[str]) -> float | None:
+    """Fracao dos termos relacionados presentes no titulo/snippet (0-1). None se
+    a keyword nao tiver termos relacionados cadastrados (comportamento atual)."""
+    if not termos_relacionados:
+        return None
+    texto = _normalizar(f"{titulo} {snippet}")
+    matches = sum(1 for t in termos_relacionados if _normalizar(t) in texto)
+    return round(matches / len(termos_relacionados), 2)
 
 
 def buscar_candidatos(
     termo: str,
+    termos_relacionados: list[str] | None = None,
     n_candidatos: int = None,
     lingua: str = None,
     pais: str = None,
@@ -70,47 +55,60 @@ def buscar_candidatos(
     lingua = lingua or config.BUSCADOR_LINGUA
     pais = pais or config.BUSCADOR_PAIS
     max_idade_dias = max_idade_dias or config.BUSCADOR_MAX_IDADE_DIAS
+    termos_relacionados = termos_relacionados or []
 
     periodo_map = {1: "1d", 2: "2d", 3: "3d", 7: "7d", 14: "14d", 30: "1m"}
     periodo = periodo_map.get(max_idade_dias, f"{max_idade_dias}d")
 
     gn = GNews(language=lingua, country=pais, max_results=n_candidatos, period=periodo)
 
+    # Busca pelo nome do assunto e, se houver, tambem combinado com cada termo
+    # relacionado - amplia a cobertura sem exigir que o termo principal sozinho
+    # traga resultado (ex: "fronteira" + "colombia").
+    queries = [termo] + [f"{termo} {t}" for t in termos_relacionados]
+
     candidatos = []
     seen_urls = set()
     descartados = 0
 
-    logger.info("Buscando candidatos para '%s'...", termo)
-    try:
-        artigos = gn.get_news(termo)
-    except Exception as e:
-        logger.error("Erro ao buscar '%s' no Google News: %s", termo, e)
-        artigos = []
+    logger.info("Buscando candidatos para '%s' (%d consulta(s))...", termo, len(queries))
+    for i, query in enumerate(queries):
+        try:
+            artigos = gn.get_news(query)
+        except Exception as e:
+            logger.error("Erro ao buscar '%s' no Google News: %s", query, e)
+            artigos = []
 
-    for art in artigos:
-        fonte = (art.get("publisher") or {}).get("title", "")
-        if not _fonte_permitida(fonte):
-            descartados += 1
-            continue
+        for art in artigos:
+            fonte = (art.get("publisher") or {}).get("title", "")
+            if not _fonte_permitida(fonte):
+                descartados += 1
+                continue
 
-        url_original = art.get("url", "")
-        if not url_original:
-            continue
+            url_original = art.get("url", "")
+            if not url_original:
+                continue
 
-        url = resolver_url(url_original) if "news.google.com" in url_original else url_original
-        if url in seen_urls:
-            continue
-        seen_urls.add(url)
+            url = resolver_url(url_original) if "news.google.com" in url_original else url_original
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
 
-        candidatos.append({
-            "url": url,
-            "url_original": url_original,
-            "titulo": art.get("title", ""),
-            "snippet": (art.get("description") or "")[:80],
-            "data": str(art.get("published date", "")),
-            "fonte": fonte,
-            "termo_origem": termo,
-        })
+            titulo = art.get("title", "")
+            snippet = (art.get("description") or "")[:80]
+            candidatos.append({
+                "url": url,
+                "url_original": url_original,
+                "titulo": titulo,
+                "snippet": snippet,
+                "data": str(art.get("published date", "")),
+                "fonte": fonte,
+                "termo_origem": termo,
+                "relevancia": _calcular_relevancia(titulo, snippet, termos_relacionados),
+            })
+
+        if i < len(queries) - 1:
+            time.sleep(0.3)
 
     time.sleep(0.3)
 
@@ -141,7 +139,7 @@ _SYSTEM_SELECTOR = (
 
 _USER_SELECTOR = """TEMA DE INTERESSE:
 {tema}
-
+{termos_relacionados_linha}
 ARTIGOS CANDIDATOS:
 {candidatos}
 
@@ -151,35 +149,43 @@ ESCOLHIDOS: {exemplo_numeros}
 """
 
 
-def _montar_prompt_selecao(tokenizer, termo: str, candidatos: list[dict], top_k: int) -> str:
+def _montar_mensagens_selecao(
+    termo: str, candidatos: list[dict], top_k: int, termos_relacionados: list[str] | None = None
+) -> tuple[str, str]:
     candidatos_fmt = _formatar_candidatos(candidatos)
     exemplo_numeros = ", ".join("<numero>" for _ in range(top_k))
+    termos_relacionados_linha = (
+        f"TERMOS RELACIONADOS (indicam maior relevancia): {', '.join(termos_relacionados)}\n"
+        if termos_relacionados else ""
+    )
     user_msg = _USER_SELECTOR.format(
-        tema=termo, candidatos=candidatos_fmt, top_k=top_k, exemplo_numeros=exemplo_numeros
+        tema=termo,
+        termos_relacionados_linha=termos_relacionados_linha,
+        candidatos=candidatos_fmt,
+        top_k=top_k,
+        exemplo_numeros=exemplo_numeros,
     )
     system_msg = _SYSTEM_SELECTOR.format(top_k=top_k)
-
-    if getattr(tokenizer, "chat_template", None):
-        messages = [
-            {"role": "system", "content": system_msg},
-            {"role": "user", "content": user_msg},
-        ]
-        return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    return f"### Instrucao:\n{system_msg}\n\n{user_msg}\n\n### Resposta:\n"
+    return system_msg, user_msg
 
 
-def selecionar_urls_llm(termo: str, candidatos: list[dict], top_k: int = None) -> list[dict]:
+def selecionar_urls_llm(
+    termo: str, candidatos: list[dict], top_k: int = None, termos_relacionados: list[str] | None = None
+) -> list[dict]:
     top_k = top_k or config.BUSCADOR_TOP_K
 
     if len(candidatos) <= top_k:
         logger.info("Menos candidatos (%d) que o top_k (%d); retornando todos.", len(candidatos), top_k)
         return candidatos
 
-    tokenizer, gen_pipe = _get_seletor_pipeline()
-    prompt = _montar_prompt_selecao(tokenizer, termo, candidatos, top_k)
-
-    saida = gen_pipe(prompt)[0]["generated_text"]
-    resposta = saida[len(prompt):].strip()
+    system_msg, user_msg = _montar_mensagens_selecao(termo, candidatos, top_k, termos_relacionados)
+    resposta = gerar(
+        base_url=config.BUSCADOR_LLM_BASE_URL,
+        model=config.BUSCADOR_LLM_MODEL,
+        system=system_msg,
+        user=user_msg,
+        max_tokens=150,
+    ).strip()
     logger.debug("Resposta do LLM seletor: %s", resposta)
 
     numeros = re.findall(r"\d+", resposta.split("ESCOLHIDOS:", 1)[-1])
@@ -200,9 +206,10 @@ def selecionar_urls_llm(termo: str, candidatos: list[dict], top_k: int = None) -
     return escolhidos
 
 
-def buscar_noticias_para_keyword(termo: str) -> list[dict]:
-    """Busca candidatos para a keyword e seleciona os TOP_K mais relevantes via LLM."""
-    candidatos = buscar_candidatos(termo)
+def buscar_noticias_para_keyword(termo: str, termos_relacionados: list[str] | None = None) -> list[dict]:
+    """Busca candidatos para a keyword (+ termos relacionados, se houver) e
+    seleciona os TOP_K mais relevantes via LLM."""
+    candidatos = buscar_candidatos(termo, termos_relacionados)
     if not candidatos:
         return []
-    return selecionar_urls_llm(termo, candidatos)
+    return selecionar_urls_llm(termo, candidatos, termos_relacionados=termos_relacionados)

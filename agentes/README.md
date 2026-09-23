@@ -8,13 +8,14 @@ Next.js — nenhum HTTP endpoint e exposto por este servico.
 
 ```
 cd agentes
-cp .env.example .env   # preencher DATABASE_URL e HF_TOKEN
+cp .env.example .env   # preencher DATABASE_URL e as variaveis LLM_*
 uv sync
 uv run playwright install chromium
 uv run main.py
 ```
 
-Roda localmente sem GPU dedicada: usa Apple Metal (MPS) quando disponivel (ex:
-MacBook Air M4) ou CPU como fallback, com os modelos em fp16/fp32 (sem
-bitsandbytes/CUDA). Defaults leves o suficiente para caberem juntos em 16GB de
-RAM unificada: Qwen2.5-1.5B-Instruct (selecao) e Qwen2.5-3B-Instruct (resumo).
+Este processo roda localmente (junto com o Postgres/pfc_web) e nao carrega
+nenhum peso de modelo — a geracao (selecao de artigos e resumo) e feita por
+chamadas HTTP a LLMs servidos via vLLM (API compativel com OpenAI) numa VM com
+GPU, acessada pela VPN. Configure `BUSCADOR_LLM_BASE_URL`/`RESUMIDOR_LLM_BASE_URL`
+com o IP da VM na VPN e a porta de cada modelo (ver `.env.example`).

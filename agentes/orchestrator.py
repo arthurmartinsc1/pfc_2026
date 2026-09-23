@@ -33,7 +33,7 @@ def processar_job(session: Session, job: SearchJob, keyword: Keyword) -> None:
     session.commit()
 
     try:
-        candidatos = buscar_noticias_para_keyword(keyword.termo)
+        candidatos = buscar_noticias_para_keyword(keyword.termo, keyword.termos_relacionados)
         if not candidatos:
             raise RuntimeError(f"Nenhuma noticia encontrada para a keyword '{keyword.termo}'")
 
@@ -62,6 +62,7 @@ def processar_job(session: Session, job: SearchJob, keyword: Keyword) -> None:
                 url=resultado["url"],
                 fonte=candidato.get("fonte"),
                 resumo=resultado["resumo"],
+                relevancia=candidato.get("relevancia"),
                 data_publicacao_original=_parse_data_publicacao(candidato.get("data")),
             )
             repository.vincular_news_keyword(

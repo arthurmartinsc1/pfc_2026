@@ -2,66 +2,25 @@
 Agente resumidor — migrado de colab/notice.ipynb.
 
 Extracao de artigo (requests+trafilatura, com fallback Playwright para sites
-React/Next.js) e geracao do resumo (Qwen2.5-7B-Instruct) preservadas do notebook.
-Unica mudanca: fora do Colab nao ha um event loop ja rodando, entao o Playwright
-usa asyncio.run() direto em vez de nest_asyncio + get_event_loop().
+React/Next.js) preservada do notebook. Geracao do resumo feita via chamada a um
+LLM servido remotamente (vLLM, API compativel com OpenAI) numa VM com GPU —
+nenhum peso e carregado neste processo.
 """
 
 import asyncio
-import gc
 import logging
 import re
 import time
 
 import requests
-import torch
 import trafilatura
 from bs4 import BeautifulSoup
-from huggingface_hub import login
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 import config
 from google_news import USER_AGENT, resolver_url
-from local_llm import resolver_device, resolver_dtype
+from llm_client import gerar
 
 logger = logging.getLogger(__name__)
-
-_resumidor = {"tokenizer": None, "pipe": None}
-
-
-def _get_resumidor_pipeline():
-    if _resumidor["pipe"] is not None:
-        return _resumidor["tokenizer"], _resumidor["pipe"]
-
-    if config.HF_TOKEN:
-        login(token=config.HF_TOKEN)
-
-    device = resolver_device()
-    dtype = resolver_dtype(device)
-    logger.info("Carregando modelo de resumo %s (device=%s)...", config.RESUMIDOR_MODEL, device)
-    tokenizer = AutoTokenizer.from_pretrained(config.RESUMIDOR_MODEL)
-    model = AutoModelForCausalLM.from_pretrained(config.RESUMIDOR_MODEL, dtype=dtype)
-    model = model.to(device)
-    gen_pipe = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-        device=device,
-        pad_token_id=tokenizer.eos_token_id,
-    )
-    _resumidor["tokenizer"] = tokenizer
-    _resumidor["pipe"] = gen_pipe
-    logger.info("Modelo de resumo carregado.")
-    return tokenizer, gen_pipe
-
-
-def _limpar_cuda():
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-        torch.cuda.synchronize()
-    elif torch.backends.mps.is_available():
-        torch.mps.empty_cache()
 
 
 # --- Extracao do artigo -------------------------------------------------
@@ -197,10 +156,12 @@ def fetch_noticia_auto(url: str, timeout: int = 20) -> dict:
 
 SYSTEM_PROMPT = (
     "Voce e um jornalista senior especializado em coberturas internacionais, economia e politica brasileira. "
-    "Seu estilo e claro, direto e narrativo: conecta fatos com fluidez, usa transicoes naturais entre os temas "
-    "e escreve como se estivesse explicando a noticia para um leitor informado mas que nao acompanhou o caso. "
-    "Responda SEMPRE no formato exato pedido, sem introducoes, sem comentarios e sem repetir o enunciado. "
-    "Use apenas informacoes presentes no texto fornecido. Nao invente datas, numeros, cargos ou nomes. "
+    "Seu estilo e claro, denso e narrativo: conecta fatos com fluidez, usa transicoes naturais entre os temas "
+    "e escreve como se estivesse explicando a noticia em profundidade para um leitor informado mas que nao "
+    "acompanhou o caso. Aproveite todo o espaco disponivel para detalhar fatos, numeros, citacoes, contexto "
+    "historico e desdobramentos - nao resuma de forma telegrafica nem corte informacao relevante por economia "
+    "de espaco. Responda SEMPRE no formato exato pedido, sem introducoes, sem comentarios e sem repetir o "
+    "enunciado. Use apenas informacoes presentes no texto fornecido. Nao invente datas, numeros, cargos ou nomes. "
     "CRITICO: use APENAS dois-pontos ASCII simples (:) apos os rotulos — nunca o caractere ： (fullwidth). "
     "Use APENAS hifen ASCII (-) nos itens de lista — nunca – ou —. "
     "Cada secao deve comecar em uma linha nova."
@@ -218,102 +179,58 @@ PRINCIPAIS TEMAS:
 - <tema 2>
 - <tema 3>
 - <tema 4>
-RESUMO: <paragrafo de 6 a 8 frases em portugues cobrindo todos os 4 temas, entre 600 e 700 caracteres, sem repetir os rotulos acima>
+- <tema 5>
+RESUMO: <resumo completo e aprofundado em portugues, cobrindo todos os temas relevantes com fatos, numeros, citacoes e contexto - pode ter varios paragrafos, entre 800 e 1000 caracteres, sem repetir os rotulos acima>
 """
 
-FALLBACK_TEMPLATE = "### Instrucao:\n{system}\n\n{user}\n\n### Resposta:\n"
-
-# Teto de saida baixo de proposito: o resumo alvo tem ~650 chars (~300 tokens).
-# Um teto alto permite geracoes degeneradas quando o modelo nao emite EOS - ele
-# gera ate o limite, o que no M4 (MPS) arrasta. 450 cobre o resumo com folga.
-MAX_NEW_TOKENS = 450
+# Teto de saida generoso: os modelos remotos (9-12B, GPU dedicada) aguentam
+# resumos bem mais ricos que os modelos pequenos que rodavam localmente em
+# CPU/MPS. min_new_tokens evita que o modelo pare cedo demais.
+MAX_NEW_TOKENS = 700
 MIN_NEW_TOKENS = 180
-# Entrada truncada agressivamente: cada token gerado reprocessa TODO o texto da
-# noticia, entao artigo grande = geracao lenta no MPS. 1200 tokens (~900 palavras)
-# ja cobrem o lede/fatos principais de qualquer materia (piramide invertida).
-MAX_NOTICIA_TOKENS = 1200
-MAX_NOTICIA_TOKENS_RETRY = 900
+# Entrada quase sem corte: 6000 tokens (~4500 palavras) cobrem qualquer materia
+# jornalistica por inteiro; o teto e so uma rede de seguranca contra outliers
+# (liveblogs, paginas mal extraidas), aproveitando o contexto de 100k do servidor.
+MAX_NOTICIA_TOKENS = 6000
 
-RESUMO_ALVO_CHARS = 650
-RESUMO_MAX_CHARS = 800
-
-
-def _montar_input(tokenizer, user_msg: str) -> str:
-    if not getattr(tokenizer, "chat_template", None):
-        return FALLBACK_TEMPLATE.format(system=SYSTEM_PROMPT, user=user_msg)
-
-    try:
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_msg},
-        ]
-        return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    except Exception:
-        # Alguns templates (ex: Gemma) nao tem role "system" dedicado.
-        messages = [{"role": "user", "content": f"{SYSTEM_PROMPT}\n\n{user_msg}"}]
-        return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+RESUMO_ALVO_CHARS = 800
+RESUMO_MAX_CHARS = 1000
 
 
-def _truncar_noticia_por_tokens(tokenizer, texto: str, max_noticia_tokens: int) -> str:
-    model_max = min(getattr(tokenizer, "model_max_length", 32768), 32768)
-    tokens_disponiveis = model_max - MAX_NEW_TOKENS - 256
-    template_vazio = _montar_input(tokenizer, USER_TEMPLATE_CURTO.format(texto=""))
-    tokens_template = len(tokenizer.encode(template_vazio, add_special_tokens=False))
-    max_tokens_noticia = max(tokens_disponiveis - tokens_template, 100)
-    max_tokens_noticia = min(max_tokens_noticia, max_noticia_tokens)
-    ids = tokenizer.encode(texto, add_special_tokens=False)
-    if len(ids) <= max_tokens_noticia:
+# Sem tokenizer local (a geracao roda no servidor remoto), a truncagem usa uma
+# estimativa de chars/token para portugues/ingles em vez de contagem exata.
+CHARS_POR_TOKEN_ESTIMADO = 4
+
+
+def _truncar_noticia(texto: str, max_noticia_tokens: int) -> str:
+    max_chars = max_noticia_tokens * CHARS_POR_TOKEN_ESTIMADO
+    if len(texto) <= max_chars:
         return texto
-    return tokenizer.decode(ids[:max_tokens_noticia], skip_special_tokens=True)
+    return texto[:max_chars]
 
 
-NUM_BEAMS = 1
-# repetition_penalty e no_repeat_ngram_size foram REMOVIDOS de proposito: com
-# geracao gulosa (num_beams=1) eles corrompem a saida estruturada (proibir repetir
-# 3-gramas quebra os rotulos "ASSUNTO:", "PRINCIPAIS TEMAS:", "- ") e empurram o
-# modelo para grafias erradas. So fazem sentido com beam search.
-
-
-def _gerar_com_limites(gen_pipe, input_text: str, max_new_tokens: int, min_new_tokens: int) -> str:
-    kwargs = dict(
-        max_new_tokens=max_new_tokens,
-        min_new_tokens=min_new_tokens,
-        do_sample=False,
-        num_beams=NUM_BEAMS,
-        return_full_text=False,
+def _gerar_com_limites(user_msg: str, max_new_tokens: int, min_new_tokens: int) -> str:
+    saida = gerar(
+        base_url=config.RESUMIDOR_LLM_BASE_URL,
+        model=config.RESUMIDOR_LLM_MODEL,
+        system=SYSTEM_PROMPT,
+        user=user_msg,
+        max_tokens=max_new_tokens,
+        min_tokens=min_new_tokens,
     )
-    if NUM_BEAMS > 1:
-        # Penalidades ajudam a diversidade entre feixes; so ativas com beam search.
-        kwargs["repetition_penalty"] = 1.15
-        kwargs["no_repeat_ngram_size"] = 3
-    result = gen_pipe(input_text, **kwargs)[0]
-    saida = result.get("generated_text", "")
-    saida = re.sub(r"<\|[^|>]+\|>.*", "", saida, flags=re.DOTALL).strip()
-    return saida
+    return re.sub(r"<\|[^|>]+\|>.*", "", saida, flags=re.DOTALL).strip()
 
 
 def gerar_resumo(texto_noticia: str) -> str:
-    tokenizer, gen_pipe = _get_resumidor_pipeline()
-    texto = _truncar_noticia_por_tokens(tokenizer, texto_noticia, MAX_NOTICIA_TOKENS)
-    input_text = _montar_input(tokenizer, USER_TEMPLATE_CURTO.format(texto=texto))
-    n_tokens_entrada = len(tokenizer.encode(input_text, add_special_tokens=False))
+    texto = _truncar_noticia(texto_noticia, MAX_NOTICIA_TOKENS)
+    user_msg = USER_TEMPLATE_CURTO.format(texto=texto)
 
-    _limpar_cuda()
     logger.info(
-        "Iniciando geracao do resumo (%d tokens de entrada, num_beams=%d, max_new_tokens=%d)...",
-        n_tokens_entrada, NUM_BEAMS, MAX_NEW_TOKENS,
+        "Iniciando geracao do resumo (~%d chars de noticia, max_new_tokens=%d)...",
+        len(texto), MAX_NEW_TOKENS,
     )
     t0 = time.monotonic()
-    try:
-        saida = _gerar_com_limites(gen_pipe, input_text, MAX_NEW_TOKENS, MIN_NEW_TOKENS)
-    except RuntimeError as e:
-        if "out of memory" not in str(e).lower():
-            raise
-        logger.warning("CUDA OOM; limpando VRAM e tentando com texto menor...")
-        _limpar_cuda()
-        texto = _truncar_noticia_por_tokens(tokenizer, texto_noticia, MAX_NOTICIA_TOKENS_RETRY)
-        input_text = _montar_input(tokenizer, USER_TEMPLATE_CURTO.format(texto=texto))
-        saida = _gerar_com_limites(gen_pipe, input_text, 900, 180)
+    saida = _gerar_com_limites(user_msg, MAX_NEW_TOKENS, MIN_NEW_TOKENS)
     logger.info("Geracao concluida em %.1fs (%d caracteres brutos)", time.monotonic() - t0, len(saida))
     return saida
 
@@ -391,7 +308,7 @@ def _fallback_extrativo(texto_noticia: str, titulo: str = "") -> tuple[str, list
     if len(temas) < 4:
         temas += ["Fato principal", "Contexto politico", "Desdobramentos", "Impactos"][:4 - len(temas)]
 
-    resumo = _ajustar_resumo(" ".join(frases[:10]), alvo=RESUMO_ALVO_CHARS, maximo=RESUMO_MAX_CHARS)
+    resumo = _ajustar_resumo(" ".join(frases[:25]), alvo=RESUMO_ALVO_CHARS, maximo=RESUMO_MAX_CHARS)
     return assunto, temas[:4], resumo
 
 
@@ -464,7 +381,6 @@ def resumir_url(url: str) -> dict:
 
     saida_bruta = gerar_resumo(noticia["texto"])
     saida_final = normalizar_saida(saida_bruta, texto_noticia=noticia["texto"], titulo=noticia["titulo"])
-    _limpar_cuda()
 
     logger.info("Resumo pronto para '%s':\n%s", noticia["titulo"], saida_final)
 

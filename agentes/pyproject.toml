@@ -15,9 +15,5 @@ dependencies = [
     "gnews>=0.3.6",
     "googlenewsdecoder>=0.1.7",
     "playwright>=1.45",
-    "transformers>=4.46",
-    "accelerate>=1.0",
-    "torch>=2.4",
-    "sentencepiece>=0.2",
-    "huggingface_hub>=0.25",
+    "openai>=1.50",
 ]
