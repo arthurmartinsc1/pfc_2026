@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+//
+// Schema modelado a partir de docs/CONTRATO.md — não alterar sem necessidade
+// explícita, pois é o contrato acordado com o time de agentes de IA.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum JobStatus {
+  pendente
+  rodando
+  concluido
+  erro
+}
+
+enum JobOrigin {
+  agendado
+  manual
+}
+
+model Keyword {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  termo            String
+  ativo            Boolean  @default(true)
+  intervaloMinutos Int      @map("intervalo_minutos")
+  createdAt        DateTime @default(now()) @map("created_at")
+  // Termos relacionados ao assunto (ex: "drone", "OTAN" para "Guerra na
+  // Ucrânia") — usados pelo agente para buscar/ranquear melhor. Array
+  // vazio = comportamento antigo (busca só pelo nome). Adição acordada
+  // via spec do time de agentes (aditiva ao CONTRATO.md).
+  termosRelacionados String[] @default([]) @map("termos_relacionados")
+
+  searchJobs SearchJob[]
+  matches    NewsKeywordMatch[]
+
+  @@map("keywords")
+}
+
+model SearchJob {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  keywordId  String    @map("keyword_id") @db.Uuid
+  status     JobStatus @default(pendente)
+  origem     JobOrigin
+  startedAt  DateTime? @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+  erroMsg    String?   @map("erro_msg")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  keyword Keyword            @relation(fields: [keywordId], references: [id])
+  matches NewsKeywordMatch[]
+
+  @@index([keywordId])
+  @@index([status])
+  @@map("search_jobs")
+}
+
+model NewsItem {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  titulo                 String
+  url                    String    @unique
+  fonte                  String?
+  resumo                 String
+  relevancia             Float?
+  dataPublicacaoOriginal DateTime? @map("data_publicacao_original")
+  fetchedAt              DateTime  @default(now()) @map("fetched_at")
+  // Curadoria manual pelo usuário final — fora do contrato com o agente,
+  // ver docs/CONTRATO.md ("Fora do escopo do contrato").
+  descartada             Boolean   @default(false)
+
+  matches NewsKeywordMatch[]
+
+  @@index([descartada])
+  @@map("news_items")
+}
+
+// Configurações gerais da interface — fora do contrato com o agente
+// (ver docs/CONTRATO.md, "Fora do escopo do contrato"). Linha única
+// (singleton), identificada por um id fixo.
+model AppSettings {
+  id                      String   @id @default("default")
+  limiteNoticiasExibidas  Int      @default(10) @map("limite_noticias_exibidas")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
+model NewsKeywordMatch {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  newsItemId String   @map("news_item_id") @db.Uuid
+  keywordId  String   @map("keyword_id") @db.Uuid
+  jobId      String   @map("job_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  newsItem NewsItem  @relation(fields: [newsItemId], references: [id])
+  keyword  Keyword   @relation(fields: [keywordId], references: [id])
+  job      SearchJob @relation(fields: [jobId], references: [id])
+
+  @@unique([newsItemId, keywordId, jobId])
+  @@index([keywordId])
+  @@map("news_keyword_matches")
+}

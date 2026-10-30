@@ -1,0 +1,251 @@
+@import "tailwindcss";
+
+/*
+ * Sistema de tokens — "Sala de Situação".
+ * Painel de apoio à decisão com identidade militar. Os nomes são semânticos
+ * (superfície, texto, acento) e cada um tem um valor no tema escuro (centro
+ * de operações noturno) e um no tema claro (papel de manual de campanha, luz
+ * de dia). Verde-oliva e vermelho-sinal são reservados exclusivamente a
+ * status operacional (coleta saudável / atenção), nunca decoração.
+ *
+ * command      — fundo de página
+ * panel        — superfícies/cartões
+ * panel-raised — superfícies em hover/elevadas
+ * khaki        — texto principal (também usado em /10../20 para bordas)
+ * sage         — texto secundário/metadados
+ * brass        — acento primário (links, botões, foco) + brass-bright p/ hover
+ * olive        — status operacional saudável
+ * signal       — status de erro/atenção
+ * series-1..6  — paleta categórica dos gráficos (ordem fixa, nunca ciclada)
+ *
+ * O tema escuro é o padrão; o claro entra por `prefers-color-scheme` ou pelo
+ * atributo `data-theme` no <html> (ver src/lib/utils/theme.ts).
+ */
+@theme {
+  --color-command: #10140d;
+  --color-panel: #181d13;
+  --color-panel-raised: #212819;
+  --color-khaki: #f2efe2;
+  --color-sage: #b0b7a0;
+  --color-brass: #d3ae57;
+  --color-brass-bright: #e8c46d;
+  --color-olive: #9ccb7d;
+  --color-signal: #e87a60;
+}
+
+:root {
+  /* Controles nativos (date picker, select, rolagem) seguem o tema. */
+  color-scheme: dark;
+
+  /* Paleta categórica dos gráficos, validada (CVD + contraste) contra
+     --color-panel. Oliva e vermelho-sinal ficam de fora de propósito: são
+     status operacional. Fica FORA do bloco @theme porque é consumida via
+     var() direto no SVG do donut, e não por classe utilitária — o Tailwind
+     v4 descarta variáveis de @theme que nenhum utilitário usa, e foi isso
+     que apagou o gráfico no tema escuro. */
+  --color-series-1: #3987e5;
+  --color-series-2: #d95926;
+  --color-series-3: #199e70;
+  --color-series-4: #c98500;
+  --color-series-5: #d55181;
+  --color-series-6: #008300;
+  --color-series-other: #8a8f80;
+
+  /* Sombra de elementos flutuantes (toast) — densa no escuro, discreta no
+     claro, onde uma sombra preta forte parece sujeira. */
+  --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.45);
+}
+
+/* ---- Tema claro -------------------------------------------------------
+   Declarado em dois lugares porque CSS não permite uma lista de seletores
+   atravessando a fronteira de @media: uma vez para quem escolheu claro
+   explicitamente, outra para quem não escolheu nada e usa um sistema claro. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-command: #e9e7d9;
+  --color-panel: #f7f5ec;
+  --color-panel-raised: #fffefa;
+  --color-khaki: #15180f;
+  --color-sage: #5a6150;
+  --color-brass: #7d5a0f;
+  --color-brass-bright: #6b4e0a;
+  --color-olive: #39702a;
+  --color-signal: #b03a22;
+
+  --color-series-1: #1f66c2;
+  --color-series-2: #b8431a;
+  --color-series-3: #0f7a55;
+  --color-series-4: #8f6000;
+  --color-series-5: #b23a69;
+  --color-series-6: #056b05;
+  --color-series-other: #6e7365;
+
+  --shadow-overlay: 0 8px 24px rgb(21 24 15 / 0.16);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+
+    --color-command: #e9e7d9;
+    --color-panel: #f7f5ec;
+    --color-panel-raised: #fffefa;
+    --color-khaki: #15180f;
+    --color-sage: #5a6150;
+    --color-brass: #7d5a0f;
+    --color-brass-bright: #6b4e0a;
+    --color-olive: #39702a;
+    --color-signal: #b03a22;
+
+    --color-series-1: #1f66c2;
+    --color-series-2: #b8431a;
+    --color-series-3: #0f7a55;
+    --color-series-4: #8f6000;
+    --color-series-5: #b23a69;
+    --color-series-6: #056b05;
+    --color-series-other: #6e7365;
+
+    --shadow-overlay: 0 8px 24px rgb(21 24 15 / 0.16);
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-public-sans);
+  --font-display: var(--font-saira);
+  --font-mono: var(--font-plex-mono);
+}
+
+body {
+  background-color: var(--color-command);
+  color: var(--color-khaki);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-brass) 30%, transparent);
+}
+
+/* Botão de tema: mostra o ícone do tema-destino (no escuro, o sol). A troca
+   é feita por CSS, e não por estado do React, para que o ícone já saia certo
+   no primeiro paint — sem piscar nem divergir da hidratação. */
+.theme-icon-to-light,
+.theme-icon-to-dark {
+  display: none;
+}
+:root[data-theme="light"] .theme-icon-to-dark,
+:root:not([data-theme="light"]) .theme-icon-to-light {
+  display: block;
+}
+/* Sem JS o atributo nunca é escrito, então o ícone segue o sistema. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .theme-icon-to-light {
+    display: none;
+  }
+  :root:not([data-theme]) .theme-icon-to-dark {
+    display: block;
+  }
+}
+
+/* Foco de teclado consistente em toda a aplicação — declarado uma única
+   vez em vez de repetir utilitários de foco em cada elemento interativo. */
+:focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Entrada escalonada dos cartões — delay controlado por --enter-delay. */
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-enter {
+  animation: enter-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--enter-delay, 0s);
+}
+
+/* Ponto de radar — pulso contínuo no status operacional. */
+@keyframes radar-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  70%,
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+.radar-dot {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.radar-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: radar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.radar-dot--static::after {
+  animation: none;
+  opacity: 0;
+}
+
+/* Donut de distribuição — ao pairar sobre uma fatia, as demais recuam
+   (ênfase), com tooltip nativo via <title>. */
+.donut-seg {
+  transition: opacity 0.15s ease;
+}
+.donut-svg:has(.donut-seg:hover) .donut-seg:not(:hover) {
+  opacity: 0.35;
+}
+
+/* Barras de notícias por dia — mesma ênfase de hover do donut. */
+.bar {
+  transition: opacity 0.15s ease;
+}
+.bars-svg:has(.bar:hover) .bar:not(:hover) {
+  opacity: 0.35;
+}
+
+/* Toast global — entra deslizando de baixo com fade. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.toast-enter {
+  animation: toast-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-enter {
+    animation: none;
+  }
+  .toast-enter {
+    animation: none;
+  }
+  .radar-dot::after {
+    animation: none;
+    opacity: 0;
+  }
+}
