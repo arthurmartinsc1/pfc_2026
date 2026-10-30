@@ -1,4 +1,17 @@
 import { prisma } from "@/lib/db/prisma";
+import {
+  MODO_APRESENTACAO,
+  distribuicaoDemo,
+  filtrarNoticiasDemo,
+  jobConcluidoDemo,
+  noticiasDemo,
+  porDiaDemo,
+  saudeDemo,
+} from "@/lib/mock/apresentacao";
+
+// Em modo de apresentação as consultas abaixo devolvem o conjunto fictício
+// de src/lib/mock/apresentacao.ts em vez de ler o banco — nenhuma escrita
+// acontece em nenhum dos dois casos. Ver o cabeçalho daquele arquivo.
 
 export const DEFAULT_PAGE_SIZE = 10;
 export const APP_SETTINGS_ID = "default";
@@ -15,6 +28,17 @@ export type NewsFeedFilters = {
 export async function getNewsFeed(filters: NewsFeedFilters) {
   const page = filters.page && filters.page > 0 ? filters.page : 1;
   const pageSize = filters.pageSize && filters.pageSize > 0 ? filters.pageSize : DEFAULT_PAGE_SIZE;
+
+  if (MODO_APRESENTACAO) {
+    const keywords = await prisma.keyword.findMany({ orderBy: { termo: "asc" } });
+    const todas = filtrarNoticiasDemo(noticiasDemo(keywords), filters);
+    return {
+      items: todas.slice((page - 1) * pageSize, page * pageSize),
+      total: todas.length,
+      page,
+      pageCount: Math.max(1, Math.ceil(todas.length / pageSize)),
+    };
+  }
 
   const search = filters.search?.trim();
 
@@ -65,13 +89,24 @@ export async function getKeywordById(id: string) {
 }
 
 export async function getKeywordsWithStatus() {
-  return prisma.keyword.findMany({
+  const keywords = await prisma.keyword.findMany({
     orderBy: { termo: "asc" },
     include: {
       searchJobs: { orderBy: { createdAt: "desc" }, take: 1 },
       _count: { select: { searchJobs: true } },
     },
   });
+
+  if (!MODO_APRESENTACAO) return keywords;
+
+  // Na apresentação, cada assunto mostra uma execução concluída há poucos
+  // minutos em vez do último job real (que pode ter dado erro ou ser antigo).
+  return keywords.map((keyword, i) => ({
+    ...keyword,
+    searchJobs: [
+      { id: `${keyword.id}-demo`, keywordId: keyword.id, ...jobConcluidoDemo(i) },
+    ],
+  }));
 }
 
 export async function getAppSettings() {
@@ -90,6 +125,11 @@ export type KeywordNewsCount = { id: string; termo: string; total: number };
 // que casa com N keywords conta uma vez em cada — por isso a soma das
 // fatias pode exceder o total de notícias (comunicado na legenda da UI).
 export async function getKeywordDistribution() {
+  if (MODO_APRESENTACAO) {
+    const keywords = await prisma.keyword.findMany({ orderBy: { termo: "asc" } });
+    return distribuicaoDemo(noticiasDemo(keywords));
+  }
+
   const [rows, totalNews] = await Promise.all([
     prisma.$queryRaw<{ id: string; termo: string; total: bigint }[]>`
       SELECT k.id, k.termo, COUNT(DISTINCT m.news_item_id) AS total
@@ -116,6 +156,11 @@ export const NEWS_PER_DAY_WINDOW = 14;
 // painel. Dias sem coleta não vêm do banco — o preenchimento com zero é
 // feito na interface, que conhece a janela completa.
 export async function getNewsPerDay(): Promise<NewsPerDay[]> {
+  if (MODO_APRESENTACAO) {
+    const keywords = await prisma.keyword.findMany({ orderBy: { termo: "asc" } });
+    return porDiaDemo(noticiasDemo(keywords));
+  }
+
   const rows = await prisma.$queryRaw<{ dia: string; total: number }[]>`
     SELECT to_char(date_trunc('day', fetched_at), 'YYYY-MM-DD') AS dia,
            COUNT(*)::int AS total
@@ -131,6 +176,8 @@ export async function getNewsPerDay(): Promise<NewsPerDay[]> {
 const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
 
 export async function getSystemHealth() {
+  if (MODO_APRESENTACAO) return saudeDemo();
+
   const [lastConcluido, totalJobs] = await Promise.all([
     prisma.searchJob.aggregate({
       _max: { finishedAt: true },

@@ -185,3 +185,32 @@ export function SearchIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+// Sol construído por primitivas (disco + 8 raios rotacionados), no mesmo
+// espírito da engrenagem — mesma grade de 24, mesma espessura de traço.
+export function SunIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="4.6" />
+      {Array.from({ length: 8 }, (_, i) => (
+        <rect
+          key={i}
+          x="11.1"
+          y="1.6"
+          width="1.8"
+          height="3.4"
+          rx="0.9"
+          transform={`rotate(${i * 45} 12 12)`}
+        />
+      ))}
+    </svg>
+  );
+}
+
+export function MoonIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M20.3 14.6a8.6 8.6 0 0 1-10.9-10.9 9 9 0 1 0 10.9 10.9Z" />
+    </svg>
+  );
+}

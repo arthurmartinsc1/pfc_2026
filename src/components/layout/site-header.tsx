@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { GearIcon, ShieldIcon } from "@/components/ui/icons";
 
 export function SiteHeader() {
@@ -25,15 +26,19 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        {!isSettings && (
-          <Link
-            href="/configuracoes"
-            className="flex items-center gap-2 rounded-sm border border-khaki/15 px-3 py-1.5 text-sm text-sage transition-colors hover:border-brass/50 hover:bg-khaki/5 hover:text-khaki"
-          >
-            <GearIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">Configurações</span>
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+
+          {!isSettings && (
+            <Link
+              href="/configuracoes"
+              className="flex items-center gap-2 rounded-sm border border-khaki/15 px-3 py-1.5 text-sm text-sage transition-colors hover:border-brass/50 hover:bg-khaki/5 hover:text-khaki"
+            >
+              <GearIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">Configurações</span>
+            </Link>
+          )}
+        </div>
       </nav>
     </header>
   );

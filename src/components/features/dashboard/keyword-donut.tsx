@@ -1,13 +1,13 @@
 import type { KeywordNewsCount } from "@/lib/db/queries";
 
-// Paleta categórica validada (CVD + contraste) contra o fundo do painel
-// (#181d13) — ordem fixa, nunca ciclada; a cor segue a keyword pela posição
-// no ranking exibido. Oliva e vermelho-sinal do tema ficam de fora de
-// propósito: são reservados a status operacional.
-const SERIES_COLORS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300"];
+// Paleta categórica definida em globals.css (um valor por tema, validada
+// para CVD e contraste contra --color-panel) — ordem fixa, nunca ciclada; a
+// cor segue a keyword pela posição no ranking exibido. Oliva e vermelho-sinal
+// do tema ficam de fora de propósito: são reservados a status operacional.
+const SERIES_COLORS = Array.from({ length: 6 }, (_, i) => `var(--color-series-${i + 1})`);
 // Acima do teto de fatias, a cauda vira "Outras" em cinza neutro — nunca
 // gerar mais matizes.
-const OTHER_COLOR = "#8a8f80";
+const OTHER_COLOR = "var(--color-series-other)";
 const MAX_SLICES = 6;
 
 const RADIUS = 62;

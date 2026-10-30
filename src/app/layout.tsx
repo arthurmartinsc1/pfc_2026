@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, Public_Sans, Saira_Condensed } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ToastProvider } from "@/components/ui/toast";
+import { THEME_INIT_SCRIPT } from "@/lib/utils/theme";
 import "./globals.css";
 
 // Trio tipográfico da "Sala de Situação": Public Sans (corpo/UI — desenhada
@@ -42,6 +43,11 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${publicSans.variable} ${sairaCondensed.variable} ${plexMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Aplica o tema salvo antes de qualquer pintura, evitando o flash
+            de tema errado na primeira carga. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <ToastProvider>
           <SiteHeader />

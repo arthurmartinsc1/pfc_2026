@@ -1,11 +1,11 @@
 import { NEWS_PER_DAY_WINDOW, type NewsPerDay } from "@/lib/db/queries";
+import { MODO_APRESENTACAO } from "@/lib/mock/apresentacao";
 
 // Série única de magnitude → um matiz só (o latão do tema), sem legenda —
 // o título nomeia a série. Barras finas ancoradas na linha de base, topo
 // arredondado, 2px de respiro entre vizinhas; rótulo direto apenas no pico
-// (rotular todo ponto é ruído).
-const BAR_COLOR = "#d3ae57";
-const ZERO_COLOR = "rgb(176 183 160 / 0.25)";
+// (rotular todo ponto é ruído). As cores vêm por utilitário de token
+// (fill-brass, fill-sage/25) para acompanharem o tema claro/escuro.
 
 const CHART_W = 560;
 const CHART_H = 170;
@@ -17,12 +17,13 @@ const MAX_BAR_W = 24;
 
 type Day = { key: string; label: string; total: number };
 
-// Preenchimento ilustrativo APENAS na exibição: dias anteriores em que o
-// script não rodou (sem nenhuma coleta no banco) ganham um valor fictício
-// estável derivado da data. Nada é escrito no banco; o dia atual e os dias
-// com coleta real sempre mostram o número verdadeiro. Desligue para exibir
-// somente dados reais (ex.: na apresentação final).
-const PREENCHER_DIAS_VAZIOS = true;
+// Preenchimento ilustrativo APENAS na exibição: dias anteriores sem nenhuma
+// coleta ganham um valor fictício estável derivado da data, para o gráfico
+// não ficar vazado de buracos na apresentação. Nada é escrito no banco, e o
+// dia atual e os dias com coleta sempre mostram o número verdadeiro.
+// Segue o mesmo interruptor do resto do mock (src/lib/mock/apresentacao.ts),
+// então desligar o modo de apresentação devolve só dados reais.
+const PREENCHER_DIAS_VAZIOS = MODO_APRESENTACAO;
 
 function totalFicticio(key: string) {
   let hash = 0;
@@ -108,7 +109,7 @@ export function NewsPerDayChart({ perDay }: { perDay: NewsPerDay[] }) {
             y1={baseline}
             x2={CHART_W - PAD_X}
             y2={baseline}
-            stroke="rgb(242 239 226 / 0.15)"
+            className="stroke-khaki/15"
             strokeWidth="1"
           />
 
@@ -123,9 +124,15 @@ export function NewsPerDayChart({ perDay }: { perDay: NewsPerDay[] }) {
             return (
               <g key={day.key} className="bar">
                 {isZero ? (
-                  <rect x={x} y={baseline - 2} width={barW} height={2} fill={ZERO_COLOR} />
+                  <rect
+                    x={x}
+                    y={baseline - 2}
+                    width={barW}
+                    height={2}
+                    className="fill-sage/25"
+                  />
                 ) : (
-                  <path d={barPath(x, barW, top, baseline)} fill={BAR_COLOR} />
+                  <path d={barPath(x, barW, top, baseline)} className="fill-brass" />
                 )}
                 {/* Alvo de hover maior que a marca (coluna inteira) */}
                 <rect

@@ -56,7 +56,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`toast-enter flex items-center gap-2 border bg-panel-raised px-4 py-2.5 text-sm shadow-[0_8px_24px_rgb(0_0_0/0.45)] ${VARIANT_CLASSES[toast.variant]}`}
+            className={`toast-enter flex items-center gap-2 border bg-panel-raised px-4 py-2.5 text-sm shadow-[var(--shadow-overlay)] ${VARIANT_CLASSES[toast.variant]}`}
           >
             {toast.variant === "success" ? (
               <CheckCircleIcon className="h-4 w-4 shrink-0" />

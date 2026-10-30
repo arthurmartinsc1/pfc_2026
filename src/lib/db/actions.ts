@@ -3,10 +3,19 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db/prisma";
 import { APP_SETTINGS_ID } from "@/lib/db/queries";
+import { MODO_APRESENTACAO, descartarNoDemo, ehIdDemo } from "@/lib/mock/apresentacao";
 
 export type ActionState = { error?: string };
 
 export async function discardNewsItem(id: string) {
+  // Notícia da apresentação: o descarte vale só para a sessão do servidor,
+  // sem tocar no banco (ver src/lib/mock/apresentacao.ts).
+  if (MODO_APRESENTACAO && ehIdDemo(id)) {
+    descartarNoDemo(id);
+    revalidatePath("/");
+    return;
+  }
+
   await prisma.newsItem.update({
     where: { id },
     data: { descartada: true },
