@@ -13,12 +13,17 @@ diretamente**, apenas através do banco de dados PostgreSQL:
   escrevem `search_jobs` e `news_items`.
 
 Por isso a aplicação funciona normalmente mesmo sem os agentes rodando —
-basta o banco existir. Veja [`docs/CONTRATO.md`](docs/CONTRATO.md) para o
-contrato completo de schema e responsabilidades, e
-[`docs/PLANO.md`](docs/PLANO.md) para o plano de implementação por fases.
+basta o banco existir.
 
-Para subir esta interface em uma máquina virtual (VPS), veja
-[`DEPLOY.md`](DEPLOY.md).
+## Documentação
+
+| Documento | Para quê |
+|---|---|
+| [`docs/CONTRATO.md`](docs/CONTRATO.md) | Contrato de schema e responsabilidades acordado com a equipe dos agentes. Leitura obrigatória antes de mexer no banco. |
+| [`docs/PLANO.md`](docs/PLANO.md) | Plano de implementação por fases. |
+| [`docs/CLAUDE-CODE.md`](docs/CLAUDE-CODE.md) | Como este projeto usa o Claude Code e como reproduzir o setup do zero numa máquina nova. |
+| [`docs/BRIEFING-AGENTES.md`](docs/BRIEFING-AGENTES.md) | Para entregar à equipe dos agentes: o que a interface espera do banco e o roteiro do manual do outro lado. |
+| [`DEPLOY.md`](DEPLOY.md) | Subir a interface numa máquina virtual (VPS). |
 
 ## Stack
 
