@@ -1,6 +1,6 @@
 # Contexto do Projeto — Sistema de Notícias (Interface Web)
 
-Este projeto é a **interface web** de um sistema de apoio à decisão (TCC/PFC). O sistema completo tem dois componentes: agentes de IA locais (busca e resumo de notícias — **fora deste repositório**, feito por outra pessoa) e esta interface (Next.js).
+Este projeto é a **interface web** de um sistema de apoio à decisão (TCC/PFC). O sistema completo tem dois componentes: agentes de IA (busca e resumo de notícias — pasta `agentes/` na raiz deste monorepo) e esta interface (Next.js).
 
 **Leia `docs/CONTRATO.md` antes de qualquer alteração de schema ou lógica de dados.** Esse documento é o contrato acordado com a outra pessoa do time e não deve ser alterado sem necessidade explícita — mudanças no schema quebram o trabalho dela.
 
@@ -17,6 +17,6 @@ Este projeto é a **interface web** de um sistema de apoio à decisão (TCC/PFC)
 - A aplicação deve funcionar normalmente mesmo sem nenhum job concluído no banco (estados vazios tratados).
 
 ## Como trabalhar comigo (Claude Code) neste projeto
-- Vamos trabalhar em fases pequenas (ver `docs/PLANO.md`). Não avance para a próxima fase sem eu confirmar que a atual está ok.
+- Vamos trabalhar em fases pequenas. Não avance para a próxima fase sem eu confirmar que a atual está ok.
 - Ao final de cada fase, rode lint/build e garanta que a aplicação sobe sem erro antes de parar.
 - Sempre comente no chat quais arquivos foram criados/alterados e por quê, de forma resumida.

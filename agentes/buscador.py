@@ -1,5 +1,5 @@
 """
-Agente buscador — migrado de colab/search_agent.ipynb.
+Agente buscador — migrado do notebook original de busca (prototipo em Colab).
 
 Logica de busca (Google News RSS via gnews + decodificacao de URL) e de selecao
 por LLM preservadas do notebook. Unica mudanca de comportamento: o notebook

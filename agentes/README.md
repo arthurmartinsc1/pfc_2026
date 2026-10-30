@@ -1,21 +1,16 @@
-# Agentes de noticias
+# Agentes de notícias
 
-Camada de agentes de IA (buscador + resumidor) do sistema de noticias para apoio
-a decisao. Le e escreve exclusivamente no Postgres compartilhado com a interface
-Next.js — nenhum HTTP endpoint e exposto por este servico.
+Camada de agentes de IA (buscador + resumidor) do sistema. Lê e escreve
+exclusivamente no Postgres compartilhado com a interface (`../web`); não expõe
+nenhum endpoint HTTP. A geração de texto é feita por chamadas HTTP a LLMs
+servidos via vLLM numa VM com GPU, acessada pela VPN.
 
-## Setup
-
-```
-cd agentes
-cp .env.example .env   # preencher DATABASE_URL e as variaveis LLM_*
+```bash
+cp .env.example .env    # preencher DATABASE_URL, *_LLM_BASE_URL e LLM_API_KEY
 uv sync
 uv run playwright install chromium
 uv run main.py
 ```
 
-Este processo roda localmente (junto com o Postgres/pfc_web) e nao carrega
-nenhum peso de modelo — a geracao (selecao de artigos e resumo) e feita por
-chamadas HTTP a LLMs servidos via vLLM (API compativel com OpenAI) numa VM com
-GPU, acessada pela VPN. Configure `BUSCADOR_LLM_BASE_URL`/`RESUMIDOR_LLM_BASE_URL`
-com o IP da VM na VPN e a porta de cada modelo (ver `.env.example`).
+Todas as variáveis, o funcionamento do pipeline e a solução de problemas estão
+no [`MANUAL.md`](../MANUAL.md) da raiz (seções 6, 7, 8 e 12).

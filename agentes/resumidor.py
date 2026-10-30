@@ -1,5 +1,5 @@
 """
-Agente resumidor — migrado de colab/notice.ipynb.
+Agente resumidor — migrado do notebook original de resumo (prototipo em Colab).
 
 Extracao de artigo (requests+trafilatura, com fallback Playwright para sites
 React/Next.js) preservada do notebook. Geracao do resumo feita via chamada a um

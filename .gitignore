@@ -1,9 +1,12 @@
+# Python (agentes/)
 .venv/
-env/
 __pycache__/
 *.pyc
+
+# Segredos — nunca versionar (os modelos versionados sao os .example)
 .env
 .env.*
 !.env.example
-hf_cache/
+
 *.log
+.DS_Store

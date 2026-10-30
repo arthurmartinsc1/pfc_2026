@@ -87,7 +87,7 @@ export function ShieldIcon({ className }: { className?: string }) {
 }
 
 // Ícones de status — usados sempre acompanhados de texto (nunca isolados),
-// para que o estado não dependa só da cor (ver docs/PLANO.md, Fase 5).
+// para que o estado não dependa só da cor.
 export function CheckCircleIcon({ className }: { className?: string }) {
   return (
     <svg

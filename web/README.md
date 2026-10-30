@@ -1,8 +1,9 @@
 # Sistema de Notícias — Interface Web
 
 > **Este diretório é a metade "interface" de um monorepo.** A raiz do
-> repositório contém os agentes de IA (`agentes/`, `scripts/`, `fineTunning/`)
-> e esta pasta `web/` contém a interface Next.js. Todos os comandos deste
+> repositório contém os agentes de IA (`agentes/`) e esta pasta `web/` contém a
+> interface Next.js. O guia completo de instalação e configuração dos dois lados
+> está no [`MANUAL.md`](../MANUAL.md) da raiz. Todos os comandos deste
 > README rodam **de dentro de `web/`**:
 >
 > ```bash
@@ -18,7 +19,7 @@ diretamente**, apenas através do banco de dados PostgreSQL:
 
 - **Esta interface** — lê e exibe notícias, gerencia `keywords` e
   `app_settings`.
-- **Agentes de IA** (busca + resumo de notícias, fora deste repositório) —
+- **Agentes de IA** (busca + resumo de notícias, pasta `../agentes`) —
   escrevem `search_jobs` e `news_items`.
 
 Por isso a aplicação funciona normalmente mesmo sem os agentes rodando —
@@ -29,10 +30,7 @@ basta o banco existir.
 | Documento | Para quê |
 |---|---|
 | [`docs/CONTRATO.md`](docs/CONTRATO.md) | Contrato de schema e responsabilidades acordado com a equipe dos agentes. Leitura obrigatória antes de mexer no banco. |
-| [`docs/PLANO.md`](docs/PLANO.md) | Plano de implementação por fases. |
-| [`docs/CLAUDE-CODE.md`](docs/CLAUDE-CODE.md) | Como este projeto usa o Claude Code e como reproduzir o setup do zero numa máquina nova. |
-| [`docs/BRIEFING-AGENTES.md`](docs/BRIEFING-AGENTES.md) | Para entregar à equipe dos agentes: o que a interface espera do banco e o roteiro do manual do outro lado. |
-| [`DEPLOY.md`](DEPLOY.md) | Subir a interface numa máquina virtual (VPS). |
+| [`../MANUAL.md`](../MANUAL.md) | Manual completo: instalação do zero, cada configuração, produção e solução de problemas. |
 
 ## Stack
 
