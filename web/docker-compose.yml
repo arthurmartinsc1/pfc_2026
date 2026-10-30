@@ -1,3 +1,8 @@
+# Nome do projeto fixo: sem isso o Compose usaria o nome da pasta, e mover
+# esta aplicacao para `web/` apontaria para um volume novo e vazio em vez do
+# banco existente (`pfc_web_db_data`).
+name: pfc_web
+
 services:
   db:
     image: postgres:16

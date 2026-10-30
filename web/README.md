@@ -1,5 +1,14 @@
 # Sistema de Notícias — Interface Web
 
+> **Este diretório é a metade "interface" de um monorepo.** A raiz do
+> repositório contém os agentes de IA (`agentes/`, `scripts/`, `fineTunning/`)
+> e esta pasta `web/` contém a interface Next.js. Todos os comandos deste
+> README rodam **de dentro de `web/`**:
+>
+> ```bash
+> cd web
+> ```
+
 Interface web (Next.js) de um sistema de apoio à decisão. Ela lista notícias
 coletadas a partir de palavras-chave configuráveis, mostra o status das
 buscas e permite gerenciar as palavras-chave e configurações gerais.

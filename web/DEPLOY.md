@@ -23,9 +23,12 @@ nvm install 20
 ## 2. Clonar o repositório
 
 ```bash
-git clone https://github.com/Petralanda/language-agents-for-cyberspace-situational-awareness.git
-cd language-agents-for-cyberspace-situational-awareness
+git clone https://github.com/arthurmartinsc1/pfc_2026.git
+cd pfc_2026/web
 ```
+
+A interface vive em `web/`; a raiz do repositório guarda os agentes de IA.
+Todos os comandos seguintes rodam de dentro de `web/`.
 
 ## 3. Variáveis de ambiente
 
@@ -83,7 +86,7 @@ reverso (Nginx/Caddy) na frente se for expor publicamente com domínio/HTTPS.
 ## 8. Atualizando após um novo deploy
 
 ```bash
-git pull
+git -C .. pull     # o repositório é a pasta de cima
 npm install
 npx prisma migrate deploy
 npm run build
